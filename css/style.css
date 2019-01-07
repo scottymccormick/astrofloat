@@ -1,10 +1,11 @@
 * {
   margin: 0;
+  box-sizing: border-box;
   font-family: 'Ubuntu', sans-serif;
 }
 
 body {
-  font-size: 100%;
+  font-size: 14px;
   color: #ffffff;
   background-color: #000000;
 }
@@ -21,7 +22,9 @@ h1 {
   height: 450px;
   width: 700px;
   border: 1px solid grey;
+  border-radius: 4px;
   margin: 10vh auto;
+  box-shadow: 0px 0px 6px 0px #ffffff;
 }
 
 footer {
@@ -29,4 +32,31 @@ footer {
   width: 100%;
   position: absolute;
   bottom: 5px;
+}
+
+.initial-actions {
+  height: 100%;
+  text-align: center;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.initial-actions button {
+  border: 0;
+  border-radius: 5px;
+  box-shadow: inset 0px 0px 10px 5px green;
+  color: #ffffff;
+  font-size: 2.5em;
+  background-color: inherit;
+  padding: 30px;
+}
+
+.initial-actions button:nth-of-type(2) {
+  box-shadow: inset 0px 0px 10px 5px blue;
+}
+
+.hidden {
+  display: none;
 }
