@@ -1,0 +1,32 @@
+* {
+  margin: 0;
+  font-family: 'Ubuntu', sans-serif;
+}
+
+body {
+  font-size: 100%;
+  color: #ffffff;
+  background-color: #000000;
+}
+
+h1 {
+  text-align: center;
+  margin: 8vh auto 4vh;
+  letter-spacing: 0.25em;
+  font-variant-ligatures: none;
+  font-size: 40px;
+}
+
+#content {
+  height: 450px;
+  width: 700px;
+  border: 1px solid grey;
+  margin: 10vh auto;
+}
+
+footer {
+  text-align: center;
+  width: 100%;
+  position: absolute;
+  bottom: 5px;
+}

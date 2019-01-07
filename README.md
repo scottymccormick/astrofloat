@@ -1,6 +1,6 @@
 # Astrofloat
 **Your Mission:** Keep the astronaut alive until interstellar help arrives.
-##User Stories
+## User Stories
 ### Main Goals
 #### A user should be able to:
 1. View instructions by clicking *How to Play*
