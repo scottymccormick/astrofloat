@@ -1,7 +1,57 @@
 /*----- constants -----*/
+
+const screenWidth = 450;
+const screenHeight = 700;
+
 /*----- app's state (variables) -----*/
 
 let game, person;
+
+class Asteroid {
+  constructor() {
+    this.div = document.createElement('div');
+    this.div.classList.add('asteroid');
+    this.dimensions = {x: 50, y: 50};
+    this.position = {x: 0, y: 0};
+
+    content.appendChild(this.div);
+
+    this.fly();
+  }
+  fly() {
+    // generate random starting point
+    // select direction - y is vert, x is horiz
+    const axis = Math.random() > 0.5 ? 'y' : 'x';
+    // select one side or other
+    const direction = Math.random() > 0.5 ? '+' : '-';
+
+    if (axis === 'x') {
+
+    }
+
+    this.move([300, 300], 5000);
+  }
+  move ([x, y], time, callback) {
+    anime({
+      targets: this.div, 
+      translateX: this.position.x += x,
+      translateY: this.position.y += y,
+      duration: time,
+      easing: 'linear',
+      elasticity: 0,
+      complete: () => this.outOfBounds()
+    });
+    
+    // detect if out of bounds
+    if (this.position.x < -this.dimensions.x || 
+      this.position.y < -this.dimensions.y ||
+      this.position.y > screenHeight ||
+      this.position.x > screenWidth) this.outOfBounds();
+  }
+  outOfBounds() {
+    this.div.remove();
+  }
+}
 
 class Person {
   constructor() {
@@ -39,15 +89,14 @@ class Person {
       targets: this.domObject, 
       translateX: this.position.x += x,
       translateY: this.position.y += y,
-      elasticity: 0,
-      duration: 0
+      elasticity: 0
     });
     
     // detect if out of bounds
     if (this.position.x < -this.dimensions.x || 
       this.position.y < -this.dimensions.y ||
-      this.position.y > game.screenHeight ||
-      this.position.x > game.screenWidth) game.over()
+      this.position.y > screenHeight ||
+      this.position.x > screenWidth) game.over()
   }
 
 }
@@ -56,8 +105,6 @@ class Game {
   constructor(){
     this.round = 1;
     this.active = true;
-    this.screenWidth = content.offsetWidth;
-    this.screenHeight = content.offsetHeight;
 
     this.keys = {};
     window.addEventListener('keydown', (e) => {
@@ -70,7 +117,8 @@ class Game {
     console.log('Game constructed');
 
     person = new Person();
-
+    let asteroid = new Asteroid();
+    // asteroid.fly();
     
   }
   keyDetect (e) {
@@ -86,6 +134,7 @@ class Game {
   }
   over() {
     $(content).append($gameOverMsg);
+    game.active = false;
   }
 } 
 
