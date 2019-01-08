@@ -7,6 +7,7 @@ class Person {
   constructor() {
     this.domObject = document.createElement('div');
     this.domObject.classList.add('astronaut');
+    this.dimensions = {x: 50, y: 50};
     this.position = {x: 0, y: 0};
 
     content.appendChild(this.domObject);
@@ -15,12 +16,20 @@ class Person {
     // initial movement
     anime({
       targets: that.domObject,
-      translateX: 325,
-      translateY: 200,
-      duration: 1,
+      translateX: [{value: 325, duration: 0}],
+      translateY: [{value: 200, duration: 0}],
+      scale: [
+        {value: 0, duration: 100},
+        {value: 1, duration: 3000, delay: 100}
+      ],
+      
+      opacity: [{value: 1, delay: 100, duration: 2000}],
+      rotate: [{value: '3turn', delay: 100, duration: 3000}],
       complete: function(anim) {
         that.position.x = 325;
         that.position.y = 200;
+        // temporarily delay onset on keyDetection
+        setTimeout(game.keyDetect, 10);
       }
     });
     
@@ -28,14 +37,19 @@ class Person {
   move ([x, y]) {
     anime({
       targets: this.domObject, 
-      translateX: this.position.x + x,
-      translateY: this.position.y + y,
+      translateX: this.position.x += x,
+      translateY: this.position.y += y,
       elasticity: 0,
       duration: 0
-    })
-    this.position.x += x;
-    this.position.y += y;
+    });
+    
+    // detect if out of bounds
+    if (this.position.x < -this.dimensions.x || 
+      this.position.y < -this.dimensions.y ||
+      this.position.y > game.screenHeight ||
+      this.position.x > game.screenWidth) game.over()
   }
+
 }
 
 class Game {
@@ -57,17 +71,21 @@ class Game {
 
     person = new Person();
 
-    setTimeout(this.keyLoop, 100);
+    
   }
-  keyLoop (e) {
-    
-    const x = game.keys['ArrowLeft'] ? -1 : 0 + game.keys['ArrowRight'] ? 1 : 0;
-    const y = game.keys['ArrowUp'] ? -1 : 0 + game.keys['ArrowDown'] ? 1 : 0;
-    person.move([x, y]);
-    if (game.active) setTimeout(game.keyLoop, 20)
-    
-    // }
-    
+  keyDetect (e) {
+    let x = game.keys['ArrowLeft'] ? -1 : 0 + game.keys['ArrowRight'] ? 1 : 0;
+    let y = game.keys['ArrowUp'] ? -1 : 0 + game.keys['ArrowDown'] ? 1 : 0;
+    x *= 5;
+    y *= 5;
+    if (x !== 0 || y !== 0) {
+      person.move([x, y])
+      // e.preventDefault();
+    };
+    if (game.active) setTimeout(game.keyDetect, 20);
+  }
+  over() {
+    $(content).append($gameOverMsg);
   }
 } 
 
@@ -75,6 +93,7 @@ class Game {
 
 const content = document.querySelector('#content');
 const initActions = document.createElement('section');
+const $gameOverMsg = $('<h2>Game Over</h2>').addClass('game-over');
 
 /*----- event listeners -----*/
 
@@ -88,16 +107,13 @@ function init() {
   console.log('Astrofloat initializted');
 
   // Add first buttons
-  const startBtn = document.createElement('button');
-  startBtn.textContent = 'Start Game';
-  startBtn.addEventListener('click', newGame);
-  initActions.appendChild(startBtn);
+  const $startBtn = $('<button/>').text('Start Game').on('click', newGame);
+  $(initActions).append($startBtn);
 
-  const howToBtn = document.createElement('button');
-  howToBtn.textContent = 'How to Play';
-  initActions.appendChild(howToBtn);
+  const $howToBtn = $('<button/>').text('How to Play');
+  $(initActions).append($howToBtn);
 
-  initActions.classList.add('initial-actions')
+  $(initActions).addClass('initial-actions')
   content.appendChild(initActions);
 
 }
