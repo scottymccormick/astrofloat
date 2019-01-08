@@ -1,7 +1,7 @@
 /*----- constants -----*/
 
-const screenWidth = 450;
-const screenHeight = 700;
+const screenWidth = 700;
+const screenHeight = 450;
 
 /*----- app's state (variables) -----*/
 
@@ -21,60 +21,98 @@ class Asteroid {
   fly() {
     // generate random starting point
     // select direction - y is vert, x is horiz
-    const axis = Math.random() > 0.5 ? 'y' : 'x';
+    // const axis = Math.random() > 0.5 ? 'y' : 'x';
+    const axis = 'x';
     // select one side or other
-    const direction = Math.random() > 0.5 ? '+' : '-';
+    // const direction = Math.random() > 0.5 ? '+' : '-';
+    const direction = '+'
 
+    const startPoint = [0, 0];
+    const endPoint = [0, 0];
     if (axis === 'x') {
-
+      startPoint[0] = -49;
+      startPoint[1] = Math.floor(Math.random() * (screenHeight - 50));
+      iterations = screenWidth;
+      this.move(startPoint, 0, false);
     }
 
-    this.move([300, 300], 5000);
+    endPoint[0] = screenWidth + this.dimensions.x; 
+    endPoint[1] = (Math.random() * (screenHeight + 50)) - startPoint[1];
+
+    this.move(endPoint, 5000, true);
   }
-  move ([x, y], time, callback) {
-    anime({
+  move ([x, y], time, end) {
+    let that = this;
+    let crossedHalf = false;
+    let flying = anime({
       targets: this.div, 
       translateX: this.position.x += x,
       translateY: this.position.y += y,
       duration: time,
       easing: 'linear',
       elasticity: 0,
-      complete: () => this.outOfBounds()
+      run: (anim) => {
+        if (this.intersects(person)) {
+          console.log('collision');
+        }
+      },
+      complete: () => {if (end) this.outOfBounds()}
     });
-    
-    // detect if out of bounds
-    if (this.position.x < -this.dimensions.x || 
-      this.position.y < -this.dimensions.y ||
-      this.position.y > screenHeight ||
-      this.position.x > screenWidth) this.outOfBounds();
   }
+  getPosition() {
+    const parentPos = content.getBoundingClientRect();
+    const childPos = this.div.getBoundingClientRect();
+    return {x: childPos.left - parentPos.left, y: childPos.top - parentPos.top};
+  }
+  intersects(obj) {
+    let objA = this;
+    let objB = obj;
+
+    let objAPos = getPosition(objA.div);
+    let objBPos = getPosition(objB.div);
+
+    if (objAPos.x > (objBPos.x - objB.dimensions.x) && 
+        objAPos.x < (objBPos.x + objB.dimensions.x) &&
+        objAPos.y > (objBPos.y - objB.dimensions.y) && 
+        objAPos.y < (objBPos.y + objB.dimensions.y)) {
+      return true;
+    }
+    
+    function getPosition(block) {
+      const parentPos = content.getBoundingClientRect();
+      const childPos = block.getBoundingClientRect();
+      return {x: childPos.left - parentPos.left, y: childPos.top - parentPos.top};
+    }
+  }
+
   outOfBounds() {
     this.div.remove();
+    console.log('destroyed asteroid');
   }
 }
 
 class Person {
   constructor() {
-    this.domObject = document.createElement('div');
-    this.domObject.classList.add('astronaut');
+    this.div = document.createElement('div');
+    this.div.classList.add('astronaut');
     this.dimensions = {x: 50, y: 50};
     this.position = {x: 0, y: 0};
 
-    content.appendChild(this.domObject);
+    content.appendChild(this.div);
 
     let that = this;
     // initial movement
     anime({
-      targets: that.domObject,
+      targets: that.div,
       translateX: [{value: 325, duration: 0}],
       translateY: [{value: 200, duration: 0}],
       scale: [
         {value: 0, duration: 100},
-        {value: 1, duration: 3000, delay: 100}
+        {value: 1, duration: 2000, delay: 100}
       ],
       
-      opacity: [{value: 1, delay: 100, duration: 2000}],
-      rotate: [{value: '3turn', delay: 100, duration: 3000}],
+      opacity: [{value: 1, delay: 100, duration: 1000}],
+      rotate: [{value: '2turn', delay: 100, duration: 2000}],
       complete: function(anim) {
         that.position.x = 325;
         that.position.y = 200;
@@ -86,7 +124,7 @@ class Person {
   }
   move ([x, y]) {
     anime({
-      targets: this.domObject, 
+      targets: this.div, 
       translateX: this.position.x += x,
       translateY: this.position.y += y,
       elasticity: 0
@@ -117,7 +155,9 @@ class Game {
     console.log('Game constructed');
 
     person = new Person();
-    let asteroid = new Asteroid();
+
+    setTimeout(() => {let asteroid = new Asteroid()}, 3000)
+    
     // asteroid.fly();
     
   }
@@ -135,6 +175,7 @@ class Game {
   over() {
     $(content).append($gameOverMsg);
     game.active = false;
+    console.log(person.position)
   }
 } 
 
