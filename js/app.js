@@ -32,7 +32,6 @@ class Asteroid {
     if (axis === 'x') {
       startPoint[0] = -49;
       startPoint[1] = Math.floor(Math.random() * (screenHeight - 50));
-      iterations = screenWidth;
       this.move(startPoint, 0, false);
     }
 
