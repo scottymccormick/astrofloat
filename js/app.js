@@ -7,22 +7,32 @@ const screenHeight = 450;
 
 let game, person;
 
-class Asteroid {
-  constructor() {
+class Mass {
+  constructor(width, height, type) {
     this.div = document.createElement('div');
-    this.div.classList.add('asteroid');
-    this.dimensions = {x: 50, y: 50};
+    this.div.classList.add(type);
+    this.dimensions = {x: width, y: height};
     this.position = {x: 0, y: 0};
+  }
+  getPosition() {
+    const parentPos = content.getBoundingClientRect();
+    const childPos = this.div.getBoundingClientRect();
+    return {x: childPos.left - parentPos.left, y: childPos.top - parentPos.top};
+  }
+}
+
+class Asteroid extends Mass {
+  constructor() {
+    super(50, 50, 'asteroid');
 
     content.appendChild(this.div);
-
     this.fly();
   }
   fly() {
     // generate random starting point
     // select direction - y is vert, x is horiz
-    // const axis = Math.random() > 0.5 ? 'y' : 'x';
-    const axis = 'x';
+    const axis = Math.random() > 0.5 ? 'y' : 'x';
+    // const axis = 'y';
     // select one side or other
     // const direction = Math.random() > 0.5 ? '+' : '-';
     const direction = '+'
@@ -32,17 +42,18 @@ class Asteroid {
     if (axis === 'x') {
       startPoint[0] = -49;
       startPoint[1] = Math.floor(Math.random() * (screenHeight - 50));
-      this.move(startPoint, 0, false);
+      endPoint[0] = screenWidth + this.dimensions.x; 
+      endPoint[1] = (Math.random() * (screenHeight + 50)) - startPoint[1];
+    } else {
+      startPoint[0] = Math.floor(Math.random() * (screenWidth - 50));
+      startPoint[1] = -49;
+      endPoint[0] = (Math.random() * (screenWidth + 50)) - startPoint[0];
+      endPoint[1] = screenHeight + this.dimensions.y;
     }
-
-    endPoint[0] = screenWidth + this.dimensions.x; 
-    endPoint[1] = (Math.random() * (screenHeight + 50)) - startPoint[1];
-
+    this.move(startPoint, 0, false);
     this.move(endPoint, 5000, true);
   }
   move ([x, y], time, end) {
-    let that = this;
-    let crossedHalf = false;
     let flying = anime({
       targets: this.div, 
       translateX: this.position.x += x,
@@ -58,48 +69,28 @@ class Asteroid {
       complete: () => {if (end) this.outOfBounds()}
     });
   }
-  getPosition() {
-    const parentPos = content.getBoundingClientRect();
-    const childPos = this.div.getBoundingClientRect();
-    return {x: childPos.left - parentPos.left, y: childPos.top - parentPos.top};
-  }
   intersects(obj) {
-    let objA = this;
-    let objB = obj;
+    let objAPos = this.getPosition();
+    let objBPos = obj.getPosition();
 
-    let objAPos = getPosition(objA.div);
-    let objBPos = getPosition(objB.div);
-
-    if (objAPos.x > (objBPos.x - objB.dimensions.x) && 
-        objAPos.x < (objBPos.x + objB.dimensions.x) &&
-        objAPos.y > (objBPos.y - objB.dimensions.y) && 
-        objAPos.y < (objBPos.y + objB.dimensions.y)) {
-      return true;
-    }
-    
-    function getPosition(block) {
-      const parentPos = content.getBoundingClientRect();
-      const childPos = block.getBoundingClientRect();
-      return {x: childPos.left - parentPos.left, y: childPos.top - parentPos.top};
-    }
+    return (objAPos.x > (objBPos.x - obj.dimensions.x) && 
+        objAPos.x < (objBPos.x + obj.dimensions.x) &&
+        objAPos.y > (objBPos.y - obj.dimensions.y) && 
+        objAPos.y < (objBPos.y + obj.dimensions.y));
   }
-
   outOfBounds() {
     this.div.remove();
     console.log('destroyed asteroid');
   }
 }
 
-class Person {
+class Person extends Mass {
   constructor() {
-    this.div = document.createElement('div');
-    this.div.classList.add('astronaut');
-    this.dimensions = {x: 50, y: 50};
-    this.position = {x: 0, y: 0};
-
+    super(50, 50, 'astronaut');
+    
     content.appendChild(this.div);
-
     let that = this;
+
     // initial movement
     anime({
       targets: that.div,
@@ -143,6 +134,7 @@ class Game {
     this.round = 1;
     this.active = true;
 
+    // attach key event listeners
     this.keys = {};
     window.addEventListener('keydown', (e) => {
       this.keys[e.code] = true;
@@ -153,12 +145,13 @@ class Game {
     
     console.log('Game constructed');
 
+    // create astronaut
     person = new Person();
 
-    setTimeout(() => {let asteroid = new Asteroid()}, 3000)
-    
-    // asteroid.fly();
-    
+    this.asteroids = [];
+    setTimeout(() => {
+      this.releaseAsteroids(20);
+    }, 2000)
   }
   keyDetect (e) {
     let x = game.keys['ArrowLeft'] ? -1 : 0 + game.keys['ArrowRight'] ? 1 : 0;
@@ -176,6 +169,16 @@ class Game {
     game.active = false;
     console.log(person.position)
   }
+  releaseAsteroids(limit) {
+    let count = 0;
+    let asteroidInterval = setInterval(() => {
+      count++;
+      if (count >= limit) {
+        clearInterval(asteroidInterval)
+      }
+      this.asteroids.push(new Asteroid());
+    }, 2000);
+  }
 } 
 
 /*----- cached element references -----*/
@@ -185,8 +188,6 @@ const initActions = document.createElement('section');
 const $gameOverMsg = $('<h2>Game Over</h2>').addClass('game-over');
 
 /*----- event listeners -----*/
-
-// document.addEventListener('keydown', keyPressed);
 
 /*----- functions -----*/
 
