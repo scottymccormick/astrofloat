@@ -30,21 +30,24 @@ class Mass {
   }
 }
 
-class Asteroid extends Mass {
-  constructor(idNumber) {
-    super(50, 50, 'asteroid');
-    this.id = `asteroid-${idNumber}`;
-    content.appendChild(this.div);
+class Projectile extends Mass {
+  constructor(width, height, type, idNumber) {
+    super(width, height, type);
+    this.active = true;
   }
-  release() {
+  release(duration) {
+    const points = this.createPaths();
+
+    this.move(points[0], 0, false);
+    this.animation = this.move(points[1], duration || 5000, true);
+  }
+  createPaths() {
     const axis = Math.random() > 0.5 ? 'x' : 'y';
     const direction = Math.random() > 0.5 ? '+' : '-';
     
     const startPoint = this.generatePoint(axis, direction);
     const endPoint = this.generatePoint(axis, direction, startPoint)
-
-    this.move(startPoint, 0, false);
-    this.animation = this.move(endPoint, 5000, true);
+    return [startPoint, endPoint];
   }
   generatePoint(axis, direction, startPoint) {
     const point = [0, 0];
@@ -76,28 +79,58 @@ class Asteroid extends Mass {
       easing: 'linear',
       elasticity: 0,
       run: (anim) => {
-        if (this.intersects(person)) {
-          console.log('collision');
-          this.div.style.backgroundColor = 'purple'; // add hit animation
-          // reduce person's health
-          setTimeout(() => {person.reduceHealth(1)}, 0);
-          
+        if (this.intersects(person) && this.active) {
+          this.collides();
         }
       },
       complete: () => {
         if (end) {
-          this.destroyAsteroid()
+          this.completesPath()
         }
       }
     });
   }
-  destroyAsteroid() {
+  collides() {
+    // does something
+    console.log(`Collision with something`);
+  }
+  completesPath() {
     this.div.remove();
+  }
+}
+
+class Asteroid extends Projectile {
+  constructor(idNumber) {
+    super(50, 50, 'asteroid');
+    this.id = `asteroid-${idNumber}`;
+    content.appendChild(this.div);
+  }
+  completesPath() {
     const deadIdx = game.asteroids.findIndex((asteroid) => {
       return asteroid.id === this.id;
     });
     game.asteroids.splice(deadIdx, 1);
-    console.log('destroyed asteroid');
+    super.completesPath();
+  }
+  collides() {
+    this.div.style.backgroundColor = 'purple'; // add hit animation
+    // reduce person's health
+    setTimeout(() => {person.affectHealth(-1)}, 0);
+  }
+}
+
+class Medic extends Projectile {
+  constructor() {
+    super(40, 40, 'medic');
+  }
+  collides() {
+    this.active = false;
+    person.affectHealth(50);
+    super.completesPath();
+  }
+  release() {
+    content.appendChild(this.div);
+    super.release();
   }
 }
 
@@ -109,9 +142,13 @@ class Person extends Mass {
     // create health and oxygen bars
     this.createStatusBars();
     content.appendChild(this.div);
-    let that = this;
 
     // initial movement
+    this.entryAnimation();
+    
+  }
+  entryAnimation() {
+    let that = this;
     anime({
       targets: that.div,
       translateX: [{value: 325, duration: 0}],
@@ -130,7 +167,6 @@ class Person extends Mass {
         setTimeout(game.keyDetect, 10);
       }
     });
-    
   }
   createStatusBars() {
     this.healthProgress = document.createElement('progress');
@@ -160,12 +196,12 @@ class Person extends Mass {
 
     content.appendChild(this.progressBox);
   }
-  reduceHealth(amount) {
-    this.health -= amount;
+  affectHealth(amount) {
+    this.health += amount;
     anime({
       targets: this.healthProgress,
       value: this.health,
-      round: 1,
+      duration: amount > 0 ? 1000 : 100,
       easing: 'linear'
     });
     if (this.health === 0) {
@@ -236,7 +272,8 @@ class Game {
       this.releaseAsteroids(40);
       // begin losing oxygen
       person.setOxygenLoss(true);
-      this.startTimer(5);
+      this.releaseMedic();
+      this.startTimer(25);
     }, 2000)
   }
   keyDetect (e) {
@@ -280,6 +317,10 @@ class Game {
       this.asteroids.push(asteroid);
       console.log(this.asteroids);
     }, 1000);
+  }
+  releaseMedic() {
+    const medic = new Medic();
+    setTimeout(() => {medic.release(10000)}, 3000);
   }
   createTimer() {
     this.timerElement = document.createElement('progress');

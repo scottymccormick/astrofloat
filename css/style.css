@@ -81,6 +81,15 @@ footer {
   background-color: red;
 }
 
+.medic {
+  display: inline-block;
+  position: absolute;
+  background-image: url('../images/red-cross-logo.jpg');
+  background-size: cover;
+  height: 40px;
+  width: 40px;
+}
+
 .game-over {
   position: relative;
   text-align: center;
