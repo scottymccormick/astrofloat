@@ -19,6 +19,15 @@ class Mass {
     const childPos = this.div.getBoundingClientRect();
     return {x: childPos.left - parentPos.left, y: childPos.top - parentPos.top};
   }
+  intersects(obj) {
+    let objAPos = this.getPosition();
+    let objBPos = obj.getPosition();
+
+    return (objAPos.x > (objBPos.x - obj.dimensions.x) && 
+        objAPos.x < (objBPos.x + obj.dimensions.x) &&
+        objAPos.y > (objBPos.y - obj.dimensions.y) && 
+        objAPos.y < (objBPos.y + obj.dimensions.y));
+  }
 }
 
 class Asteroid extends Mass {
@@ -70,19 +79,14 @@ class Asteroid extends Mass {
       run: (anim) => {
         if (this.intersects(person)) {
           console.log('collision');
+          this.div.style.backgroundColor = 'purple'; // add hit animation
+          // reduce person's health
+          person.reduceHealth(1);
+          
         }
       },
       complete: () => {if (end) this.outOfBounds()}
     });
-  }
-  intersects(obj) {
-    let objAPos = this.getPosition();
-    let objBPos = obj.getPosition();
-
-    return (objAPos.x > (objBPos.x - obj.dimensions.x) && 
-        objAPos.x < (objBPos.x + obj.dimensions.x) &&
-        objAPos.y > (objBPos.y - obj.dimensions.y) && 
-        objAPos.y < (objBPos.y + obj.dimensions.y));
   }
   outOfBounds() {
     this.div.remove();
@@ -93,7 +97,10 @@ class Asteroid extends Mass {
 class Person extends Mass {
   constructor() {
     super(50, 50, 'astronaut');
-    
+    this.health = 100;
+    this.oxygen = 100;
+    // create health and oxygen bars
+    this.createStatusBars();
     content.appendChild(this.div);
     let that = this;
 
@@ -114,9 +121,56 @@ class Person extends Mass {
         that.position.y = 200;
         // temporarily delay onset on keyDetection
         setTimeout(game.keyDetect, 10);
+
+        // begin losing oxygen
+        that.setOxygenLoss(true);
       }
     });
     
+  }
+  createStatusBars() {
+    this.healthProgress = document.createElement('progress');
+    this.healthProgress.setAttribute('max', 100);
+    this.healthProgress.setAttribute('value', this.health);
+    const healthLabel = document.createElement('label');
+    healthLabel.textContent = 'Health';
+
+    this.oxygenProgress = document.createElement('progress');
+    this.oxygenProgress.setAttribute('max', 100);
+    this.oxygenProgress.setAttribute('value', this.oxygen);
+    const oxygenLabel = document.createElement('label');
+    oxygenLabel.textContent = 'Oxygen';
+
+    content.appendChild(healthLabel);
+    content.appendChild(this.healthProgress);
+    content.appendChild(document.createElement('br'))
+    content.appendChild(oxygenLabel);
+    content.appendChild(this.oxygenProgress);
+  }
+  reduceHealth(amount) {
+    this.health -= amount;
+    anime({
+      targets: this.healthProgress,
+      value: this.health,
+      round: 1,
+      easing: 'linear'
+    });
+  }
+  setOxygenLoss(toLose) {
+    if (toLose) {
+      this.oxygenInterval = setInterval(() => {
+        if (this.oxygen === 0) {
+          clearInterval(this.oxygenInterval);
+        }
+        this.oxygen--;
+        anime({
+          targets: this.oxygenProgress,
+          value: this.oxygen,
+          round: 1,
+          easing: 'linear'
+        });
+      }, 400)
+    }
   }
   move ([x, y]) {
     anime({
