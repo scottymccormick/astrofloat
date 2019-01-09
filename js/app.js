@@ -35,7 +35,6 @@ class Asteroid extends Mass {
     super(50, 50, 'asteroid');
     this.id = `asteroid-${idNumber}`;
     content.appendChild(this.div);
-    // this.release();
   }
   release() {
     const axis = Math.random() > 0.5 ? 'x' : 'y';
@@ -129,9 +128,6 @@ class Person extends Mass {
         that.position.y = 200;
         // temporarily delay onset on keyDetection
         setTimeout(game.keyDetect, 10);
-
-        // begin losing oxygen
-        that.setOxygenLoss(true);
       }
     });
     
@@ -179,14 +175,14 @@ class Person extends Mass {
   setOxygenLoss(toLose) {
     if (toLose) {
       this.oxygenInterval = setInterval(() => {
-        if (this.oxygen === 0) {
+        if (this.oxygen <= 0) {
           game.over();
         }
         this.oxygen -= 0.25;
         anime({
           targets: this.oxygenProgress,
           value: this.oxygen,
-          elasticity: 0,
+          duration: 1,
           easing: 'linear'
         });
       }, 100)
@@ -216,6 +212,7 @@ class Game {
     this.round = 1;
     this.active = true;
     this.asteroidCounter = 0;
+    this.timer = 30;
 
     // attach key event listeners
     this.keys = {};
@@ -231,9 +228,15 @@ class Game {
     // create astronaut
     person = new Person();
 
+    // add timer to window
+    this.createTimer();
+
     this.asteroids = [];
     setTimeout(() => {
       this.releaseAsteroids(40);
+      // begin losing oxygen
+      person.setOxygenLoss(true);
+      this.startTimer(5);
     }, 2000)
   }
   keyDetect (e) {
@@ -277,6 +280,44 @@ class Game {
       this.asteroids.push(asteroid);
       console.log(this.asteroids);
     }, 1000);
+  }
+  createTimer() {
+    this.timerElement = document.createElement('progress');
+    this.timerElement.setAttribute('max', this.timer);
+    this.timerElement.setAttribute('value', this.timer);
+    this.timerElement.setAttribute('id', 'timer');
+
+    this.timerLabel = document.createElement('label');
+    this.timerLabel.textContent = 'Timer';
+    this.timerLabel.setAttribute('for', 'timer');
+
+    this.timerSection = document.createElement('section');
+    this.timerSection.classList.add('timer-section');
+
+    this.timerSection.appendChild(this.timerLabel);
+    this.timerSection.appendChild(this.timerElement);
+
+    content.appendChild(this.timerSection);
+
+    
+  }
+  startTimer(start) {
+    this.timerElement.setAttribute('max', start);
+    this.timerElement.setAttribute('value', this.timer);
+    this.timer = start;
+    this.timerInterval = setInterval(() => {
+      if (this.timer <= 0) {
+        clearInterval(this.timerInterval);
+        game.over();
+      }
+      this.timer--;
+      anime({
+        targets: this.timerElement,
+        value: this.timer,
+        round: 1,
+        easing: 'linear'
+      });      
+    }, 1000)
   }
 } 
 

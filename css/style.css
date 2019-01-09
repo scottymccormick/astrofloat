@@ -94,3 +94,9 @@ progress {
   position: absolute;
   z-index: 1;
 }
+
+.timer-section {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+}
