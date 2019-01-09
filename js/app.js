@@ -3,6 +3,8 @@
 const screenWidth = 700;
 const screenHeight = 450;
 
+const timerLength = 20;
+
 /*----- app's state (variables) -----*/
 
 let game, person;
@@ -120,8 +122,9 @@ class Asteroid extends Projectile {
 }
 
 class Medic extends Projectile {
-  constructor() {
+  constructor(idNumber) {
     super(40, 40, 'medic');
+    this.id = `medic-${idNumber}`;
   }
   collides() {
     this.active = false;
@@ -197,7 +200,12 @@ class Person extends Mass {
     content.appendChild(this.progressBox);
   }
   affectHealth(amount) {
-    this.health += amount;
+    if (amount + this.health > 100) {
+      this.health = 100;
+    } else {
+      this.health += amount;
+    }
+    
     anime({
       targets: this.healthProgress,
       value: this.health,
@@ -248,6 +256,7 @@ class Game {
     this.round = 1;
     this.active = true;
     this.asteroidCounter = 0;
+    this.medicCounter = 0;
     this.timer = 30;
 
     // attach key event listeners
@@ -268,12 +277,13 @@ class Game {
     this.createTimer();
 
     this.asteroids = [];
+    this.medics = [];
     setTimeout(() => {
       this.releaseAsteroids(40);
       // begin losing oxygen
       person.setOxygenLoss(true);
-      this.releaseMedic();
-      this.startTimer(25);
+      this.releaseMedics(30);
+      this.startTimer(timerLength); // temporary global constant
     }, 2000)
   }
   keyDetect (e) {
@@ -287,20 +297,26 @@ class Game {
     };
     if (game.active) setTimeout(game.keyDetect, 20);
   }
-  over() {
-    $(content).append($gameOverMsg);
+  over(cause) {
+
+    if (cause === 'timer') {
+      content.append(overBox);
+      overBox.appendChild(roundOverMsg);
+    } else {
+      $(content).append($gameOverMsg);
+    }
+
+    
     game.active = false;
 
     clearInterval(this.asteroidInterval);
     clearInterval(person.setOxygenLoss(false));
+    clearInterval(this.timerInterval);
+    clearInterval(this.medicReleaseInterval);
     
-    for (let i = 0; i < this.asteroids.length; i++) {
-      if (this.asteroids[i]){
-        console.log(this.asteroids[i].animation)
-        this.asteroids[i].animation.pause();
-        // undergo some destruction animation
-      }
-    }
+    this.stopAsteroids();
+    this.stopMedics();
+    
   }
   releaseAsteroids(limit) {
     let count = 0;
@@ -310,17 +326,30 @@ class Game {
         clearInterval(this.asteroidInterval)
       }
       const asteroid = new Asteroid(this.asteroidCounter++);
-      // const asteroidKey = asteroid.id;
-      // const asteroidObj = {};
-      // asteroidObj[asteroidKey] = asteroid;
       asteroid.release();
       this.asteroids.push(asteroid);
       console.log(this.asteroids);
     }, 1000);
   }
-  releaseMedic() {
-    const medic = new Medic();
-    setTimeout(() => {medic.release(10000)}, 3000);
+  releaseMedics(rate, duration) {
+    // rate is # of releases per minute;
+    
+    this.medicReleaseInterval = setInterval(() => {
+      const medic = new Medic(this.medicCounter++);
+      this.medics.push(medic);
+      medic.release(duration);
+    }, 1000 / (rate / 60));
+
+  }
+  stopAsteroids() {
+    for (let i = 0; i < this.asteroids.length; i++) {
+      this.asteroids[i].animation.pause();
+    }
+  }
+  stopMedics() {
+    for (let i = 0; i < this.medics.length; i++) {
+      this.medics[i].animation.pause();
+    }
   }
   createTimer() {
     this.timerElement = document.createElement('progress');
@@ -349,7 +378,7 @@ class Game {
     this.timerInterval = setInterval(() => {
       if (this.timer <= 0) {
         clearInterval(this.timerInterval);
-        game.over();
+        game.over('timer');
       }
       this.timer--;
       anime({
@@ -367,6 +396,8 @@ class Game {
 const content = document.querySelector('#content');
 const initActions = document.createElement('section');
 const $gameOverMsg = $('<h2>Game Over</h2>').addClass('game-over');
+const roundOverMsg = document.createElement('h2');
+const overBox = document.createElement('div');
 
 /*----- event listeners -----*/
 
@@ -386,6 +417,12 @@ function init() {
 
   $(initActions).addClass('initial-actions')
   content.appendChild(initActions);
+
+  // Style Messages
+  roundOverMsg.textContent = 'Round Over'
+  roundOverMsg.classList.add('round-over');
+
+  overBox.classList.add('over-box');
 
 }
 
