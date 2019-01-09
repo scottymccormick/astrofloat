@@ -22,36 +22,42 @@ class Mass {
 }
 
 class Asteroid extends Mass {
-  constructor() {
+  constructor(idNumber) {
     super(50, 50, 'asteroid');
-
+    this.id = `asteroid-${idNumber}`;
     content.appendChild(this.div);
-    this.fly();
+    // this.release();
   }
-  fly() {
-    // generate random starting point
-    // select direction - y is vert, x is horiz
-    const axis = Math.random() > 0.5 ? 'y' : 'x';
-    // const axis = 'y';
-    // select one side or other
-    // const direction = Math.random() > 0.5 ? '+' : '-';
-    const direction = '+'
+  release() {
+    const axis = Math.random() > 0.5 ? 'x' : 'y';
+    const direction = Math.random() > 0.5 ? '+' : '-';
+    
+    const startPoint = this.generatePoint(axis, direction);
+    const endPoint = this.generatePoint(axis, direction, startPoint)
 
-    const startPoint = [0, 0];
-    const endPoint = [0, 0];
-    if (axis === 'x') {
-      startPoint[0] = -49;
-      startPoint[1] = Math.floor(Math.random() * (screenHeight - 50));
-      endPoint[0] = screenWidth + this.dimensions.x; 
-      endPoint[1] = (Math.random() * (screenHeight + 50)) - startPoint[1];
-    } else {
-      startPoint[0] = Math.floor(Math.random() * (screenWidth - 50));
-      startPoint[1] = -49;
-      endPoint[0] = (Math.random() * (screenWidth + 50)) - startPoint[0];
-      endPoint[1] = screenHeight + this.dimensions.y;
-    }
     this.move(startPoint, 0, false);
     this.move(endPoint, 5000, true);
+  }
+  generatePoint(axis, direction, startPoint) {
+    const point = [0, 0];
+    if (!startPoint) {
+      if(axis === 'x') {
+        point[0] = direction === '+' ? -this.dimensions.x : screenWidth;
+        point[1] = Math.random() * (screenHeight + this.dimensions.y) - this.dimensions.y;
+      } else { // axis === 'y'
+        point[0] = Math.random() * (screenWidth + this.dimensions.x) - this.dimensions.x;
+        point[1] =  direction === '+' ? -this.dimensions.y : screenHeight;
+      }
+    } else { // startPoint exists
+      if (axis === 'x') {
+        point[0] = (direction === '+' ? 1 : -1) * (screenWidth + this.dimensions.x); 
+        point[1] = (Math.random() * 1.4 * (screenHeight + this.dimensions.y)) - startPoint[1];
+      } else { // axis === 'y'
+        point[0] = (Math.random() * 1.4 * (screenWidth + this.dimensions.x)) - startPoint[0];
+        point[1] = (direction === '+' ? 1 : -1) * (screenHeight + this.dimensions.y);
+      }
+    }
+    return point;
   }
   move ([x, y], time, end) {
     let flying = anime({
@@ -133,6 +139,7 @@ class Game {
   constructor(){
     this.round = 1;
     this.active = true;
+    this.asteroidCounter = 0;
 
     // attach key event listeners
     this.keys = {};
@@ -150,7 +157,7 @@ class Game {
 
     this.asteroids = [];
     setTimeout(() => {
-      this.releaseAsteroids(20);
+      this.releaseAsteroids(40);
     }, 2000)
   }
   keyDetect (e) {
@@ -171,13 +178,19 @@ class Game {
   }
   releaseAsteroids(limit) {
     let count = 0;
-    let asteroidInterval = setInterval(() => {
+    this.asteroidInterval = setInterval(() => {
       count++;
       if (count >= limit) {
-        clearInterval(asteroidInterval)
+        clearInterval(this.asteroidInterval)
       }
-      this.asteroids.push(new Asteroid());
-    }, 2000);
+      const asteroid = new Asteroid(this.asteroidCounter++);
+      const asteroidKey = asteroid.id;
+      const asteroidObj = {};
+      asteroidObj[asteroidKey] = asteroid;
+      asteroid.release();
+      this.asteroids.push(asteroidObj);
+      console.log(this.asteroids);
+    }, 1000);
   }
 } 
 
