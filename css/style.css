@@ -85,3 +85,12 @@ footer {
   position: relative;
   text-align: center;
 }
+
+progress {
+  background-color: grey;
+}
+
+.progress-box {
+  position: absolute;
+  z-index: 1;
+}

@@ -45,7 +45,7 @@ class Asteroid extends Mass {
     const endPoint = this.generatePoint(axis, direction, startPoint)
 
     this.move(startPoint, 0, false);
-    this.move(endPoint, 5000, true);
+    this.animation = this.move(endPoint, 5000, true);
   }
   generatePoint(axis, direction, startPoint) {
     const point = [0, 0];
@@ -69,7 +69,7 @@ class Asteroid extends Mass {
     return point;
   }
   move ([x, y], time, end) {
-    let flying = anime({
+    return anime({
       targets: this.div, 
       translateX: this.position.x += x,
       translateY: this.position.y += y,
@@ -81,15 +81,23 @@ class Asteroid extends Mass {
           console.log('collision');
           this.div.style.backgroundColor = 'purple'; // add hit animation
           // reduce person's health
-          person.reduceHealth(1);
+          setTimeout(() => {person.reduceHealth(1)}, 0);
           
         }
       },
-      complete: () => {if (end) this.outOfBounds()}
+      complete: () => {
+        if (end) {
+          this.destroyAsteroid()
+        }
+      }
     });
   }
-  outOfBounds() {
+  destroyAsteroid() {
     this.div.remove();
+    const deadIdx = game.asteroids.findIndex((asteroid) => {
+      return asteroid.id === this.id;
+    });
+    game.asteroids.splice(deadIdx, 1);
     console.log('destroyed asteroid');
   }
 }
@@ -132,20 +140,29 @@ class Person extends Mass {
     this.healthProgress = document.createElement('progress');
     this.healthProgress.setAttribute('max', 100);
     this.healthProgress.setAttribute('value', this.health);
+    this.healthProgress.setAttribute('id', 'health-progress')
     const healthLabel = document.createElement('label');
+    healthLabel.setAttribute('for', 'health-progress')
     healthLabel.textContent = 'Health';
 
     this.oxygenProgress = document.createElement('progress');
     this.oxygenProgress.setAttribute('max', 100);
     this.oxygenProgress.setAttribute('value', this.oxygen);
+    this.oxygenProgress.setAttribute('id', 'oxygen-progress');
     const oxygenLabel = document.createElement('label');
+    oxygenLabel.setAttribute('for', 'oxygen-progress');
     oxygenLabel.textContent = 'Oxygen';
 
-    content.appendChild(healthLabel);
-    content.appendChild(this.healthProgress);
-    content.appendChild(document.createElement('br'))
-    content.appendChild(oxygenLabel);
-    content.appendChild(this.oxygenProgress);
+    this.progressBox = document.createElement('section');
+    this.progressBox.classList.add('progress-box')
+
+    this.progressBox.appendChild(healthLabel);
+    this.progressBox.appendChild(this.healthProgress);
+    this.progressBox.appendChild(document.createElement('br'))
+    this.progressBox.appendChild(oxygenLabel);
+    this.progressBox.appendChild(this.oxygenProgress);
+
+    content.appendChild(this.progressBox);
   }
   reduceHealth(amount) {
     this.health -= amount;
@@ -155,21 +172,26 @@ class Person extends Mass {
       round: 1,
       easing: 'linear'
     });
+    if (this.health === 0) {
+      game.over();
+    }
   }
   setOxygenLoss(toLose) {
     if (toLose) {
       this.oxygenInterval = setInterval(() => {
         if (this.oxygen === 0) {
-          clearInterval(this.oxygenInterval);
+          game.over();
         }
-        this.oxygen--;
+        this.oxygen -= 0.25;
         anime({
           targets: this.oxygenProgress,
           value: this.oxygen,
-          round: 1,
+          elasticity: 0,
           easing: 'linear'
         });
-      }, 400)
+      }, 100)
+    } else {
+      clearInterval(this.oxygenInterval);
     }
   }
   move ([x, y]) {
@@ -228,7 +250,17 @@ class Game {
   over() {
     $(content).append($gameOverMsg);
     game.active = false;
-    console.log(person.position)
+
+    clearInterval(this.asteroidInterval);
+    clearInterval(person.setOxygenLoss(false));
+    
+    for (let i = 0; i < this.asteroids.length; i++) {
+      if (this.asteroids[i]){
+        console.log(this.asteroids[i].animation)
+        this.asteroids[i].animation.pause();
+        // undergo some destruction animation
+      }
+    }
   }
   releaseAsteroids(limit) {
     let count = 0;
@@ -238,11 +270,11 @@ class Game {
         clearInterval(this.asteroidInterval)
       }
       const asteroid = new Asteroid(this.asteroidCounter++);
-      const asteroidKey = asteroid.id;
-      const asteroidObj = {};
-      asteroidObj[asteroidKey] = asteroid;
+      // const asteroidKey = asteroid.id;
+      // const asteroidObj = {};
+      // asteroidObj[asteroidKey] = asteroid;
       asteroid.release();
-      this.asteroids.push(asteroidObj);
+      this.asteroids.push(asteroid);
       console.log(this.asteroids);
     }, 1000);
   }
