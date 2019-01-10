@@ -226,7 +226,7 @@ class Person extends Mass {
     }
     
     anime({
-      targets: this[progress],
+      targets: game[progress],
       value: this[attribute],
       duration: 0,
       easing: 'linear'
@@ -243,7 +243,7 @@ class Person extends Mass {
         }
         this.air -= 0.25;
         anime({
-          targets: this.airProgress,
+          targets: game.airProgress,
           value: this.air,
           duration: 1,
           easing: 'linear'
@@ -343,7 +343,7 @@ class Game {
   createStatusBars() {
     this.healthProgress = document.createElement('progress');
     this.healthProgress.setAttribute('max', 100);
-    this.healthProgress.setAttribute('value', this.health);
+    this.healthProgress.setAttribute('value', person.health);
     this.healthProgress.setAttribute('id', 'health-progress')
     const healthLabel = document.createElement('label');
     healthLabel.setAttribute('for', 'health-progress')
@@ -351,7 +351,7 @@ class Game {
 
     this.airProgress = document.createElement('progress');
     this.airProgress.setAttribute('max', 100);
-    this.airProgress.setAttribute('value', this.air);
+    this.airProgress.setAttribute('value', person.air);
     this.airProgress.setAttribute('id', 'air-progress');
     const airLabel = document.createElement('label');
     airLabel.setAttribute('for', 'air-progress');
