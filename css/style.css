@@ -8,6 +8,8 @@ body {
   font-size: 14px;
   color: #ffffff;
   background-color: #000000;
+  height: 100%;
+  position: relative;
 }
 
 h1 {
@@ -21,8 +23,8 @@ h1 {
 #content {
   position: relative;
   overflow: hidden;
-  height: 450px;
-  width: 700px;
+  height: 500px;
+  width: 800px;
   border: 1px solid grey;
   border-radius: 4px;
   margin: 10vh auto;
@@ -57,10 +59,6 @@ footer {
 
 .initial-actions button:nth-of-type(2) {
   box-shadow: inset 0px 0px 10px 5px blue;
-}
-
-.hidden {
-  display: none;
 }
 
 .astronaut {
@@ -102,13 +100,19 @@ footer {
   line-height: 30px;
 }
 
-.over-box {
+.over-content {
   display: flex;
   height: 100%;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  position: relative;
-  width: 100%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  z-index: 1;
   background-color: rgba(230, 230, 230, 0.3);
 }
 
@@ -117,11 +121,30 @@ footer {
   text-align: center;
 }
 
+.round-over-container {
+  width: 50%;
+  padding: 10px;
+  box-shadow: 0px 0px 20px 5px rgba(0,0,0,0.7);
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 5px;
+}
+
 .round-over {
-  color: purple;
-  background-color: white;
-  padding: 20px;
+  color: #51ff0d;
+  padding: 10px;
   text-align: center;
+}
+
+.next-round-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 5px;
+  font-size: 1.3em;
+  padding: 10px;
+  box-shadow: inset 0px 0px 15px 5px #51ff0d;
+  margin-top: 10px;
+  background-color: black;
+  color: white;
 }
 
 progress {
@@ -132,9 +155,22 @@ progress {
   position: absolute;
   z-index: 1;
 }
+.round-box {
+  position: absolute;
+  top: 0px;
+  left: 0;
+  right: 0;
+  margin: auto;
+  text-align: center;
+  font-size: 1.5em;
+}
 
 .timer-section {
   position: absolute;
   z-index: 1;
   right: 0;
+}
+
+.hidden {
+  display: none;
 }

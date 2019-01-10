@@ -1,9 +1,9 @@
 /*----- constants -----*/
 
-const screenWidth = 700;
-const screenHeight = 450;
+const screenWidth = 800;
+const screenHeight = 500;
 
-const timerLength = 30;
+const timerLength = 5;
 
 const rateMap = {
   Astronaut: {
@@ -193,6 +193,13 @@ class Medic extends Projectile {
     content.appendChild(this.div);
     super.release();
   }
+  completesPath() {
+    const deadIdx = game.medics.findIndex((medic) => {
+      return medic.id === this.id;
+    });
+    game.medics.splice(deadIdx, 1);
+    super.completesPath();
+  }
 }
 
 class Oxygen extends Projectile {
@@ -210,6 +217,13 @@ class Oxygen extends Projectile {
     content.appendChild(this.div);
     super.release();
   }
+  completesPath() {
+    const deadIdx = game.oxygens.findIndex((oxygen) => {
+      return oxygen.id === this.id;
+    });
+    game.oxygens.splice(deadIdx, 1);
+    super.completesPath();
+  }
 }
 
 class Person extends Mass {
@@ -217,30 +231,28 @@ class Person extends Mass {
     super(50, 50, 'astronaut');
     this.health = 100;
     this.air = 100;
-    // create health and air bars
-    // this.createStatusBars();
+    this.animationDuration = 2100;
     content.appendChild(this.div);
 
-    // initial movement
     this.entryAnimation();
-    
   }
   entryAnimation() {
     let that = this;
+    const initialX = (screenWidth / 2) - (this.dimensions.x / 2);
+    const initialY = (screenHeight / 2) - (this.dimensions.y / 2);
     anime({
       targets: that.div,
-      translateX: [{value: 325, duration: 0}],
-      translateY: [{value: 200, duration: 0}],
+      translateX: [{value: initialX, duration: 0}],
+      translateY: [{value: initialY, duration: 0}],
       scale: [
         {value: 0, duration: 100},
         {value: 1, duration: 2000, delay: 100}
       ],
-      
       opacity: [{value: 1, delay: 100, duration: 1000}],
       rotate: [{value: '2turn', delay: 100, duration: 2000}],
       complete: function(anim) {
-        that.position.x = 325;
-        that.position.y = 200;
+        that.position.x = initialX;
+        that.position.y = initialY;
         // temporarily delay onset on keyDetection
         setTimeout(game.keyDetect, 10);
       }
@@ -298,28 +310,26 @@ class Person extends Mass {
       this.position.y > screenHeight ||
       this.position.x > screenWidth) game.over()
   }
+  reset() {
+    this.health = 100;
+    this.air = 100;
+    this.entryAnimation();
+  }
 
 }
 
 class Game {
   constructor(){
+    this.makeElements();
     this.newGame();
     this.attachKeyListeners();
     this.createStatusBars();
     this.createTimer();
-
-    this.projectiles = ['asteroids', 'medics', 'oxygen'];
     
-    setTimeout(() => {
-      this.releaseAsteroids(40);
-      // begin losing oxygen
-      person.setAirLoss(true);
-      this.releaseMedics(30);
-      this.releaseOxygen(60);
-      this.startTimer(timerLength); // temporary global constant
-    }, 2000);
 
-    console.log('Game constructed');
+    this.projectiles = ['asteroids', 'medics', 'oxygens'];
+    
+    setTimeout(() => {this.startRound()}, person.animationDuration);
   }
   newGame() {
     this.round = 0;
@@ -329,7 +339,7 @@ class Game {
 
     this.asteroids = [];
     this.medics = [];
-    this.oxygen = [];
+    this.oxygens = [];
     // create astronaut
     person = new Person();
 
@@ -339,6 +349,11 @@ class Game {
     this.round++;
     this.active = true;
     this.timer = 30;
+
+    // destroy all projectiles
+    if (this.round > 1) this.destroyProjectiles();
+
+    this.roundNumber.textContent = this.round;
 
     this.levelRates = rateMap[`Level${this.round}`];
   }
@@ -398,16 +413,63 @@ class Game {
 
     content.appendChild(this.progressBox);
   }
-  over(cause) {
+  makeElements() {
+    this.nextRoundBtn = document.createElement('button');
+    this.nextRoundBtn.classList.add('next-round-btn')
+    this.nextRoundBtn.textContent = 'Next Level';
+    this.nextRoundBtn.addEventListener('click', () => {
+      this.newRound();
+      this.startRound();
+      overScreenBackground.classList.add('hidden');
+      person.reset();
+    });
+    
+    roundOverMsg.classList.add('round-over');
 
+    this.roundOverContainer = document.createElement('section');
+    this.roundOverContainer.classList.add('round-over-container');
+    this.roundOverContainer.appendChild(roundOverMsg);
+    this.roundOverContainer.appendChild(this.nextRoundBtn);
+
+    overScreenBackground.appendChild(this.roundOverContainer);
+    overScreenBackground.classList.add('hidden');
+    content.append(overScreenBackground);
+
+    this.roundBox = document.createElement('section');
+    this.roundBox.classList.add('round-box');
+    this.roundLabel = document.createElement('label');
+    this.roundLabel.textContent = 'Level: ';
+    this.roundNumber = document.createElement('span');
+    this.roundNumber.textContent = this.round;
+    this.roundBox.appendChild(this.roundLabel);
+    this.roundBox.appendChild(this.roundNumber);
+    content.appendChild(this.roundBox);
+  }
+  startRound() {
+    this.releaseAsteroids();
+    this.releaseMedics();
+    this.releaseOxygen();
+    this.startTimer(timerLength); // temporary global constant
+    // begin losing oxygen
+    person.setAirLoss(true);
+  }
+  destroyProjectiles() {
+    this.projectiles.forEach((type) => {
+      for (let i = this[type].length; i >= 0; i--) {
+        const projectile = this[type][i];
+        projectile.completesPath();
+      }
+      console.log(this[type]);
+    })
+  }
+  over(cause) {
     if (cause === 'timer') {
-      content.append(overBox);
-      overBox.appendChild(roundOverMsg);
+      overScreenBackground.classList.remove('hidden');
+      // make next round button appear
+      roundOverMsg.textContent = `Level ${this.round} Complete!`;
     } else {
       $(content).append($gameOverMsg);
     }
-
-    
     game.active = false;
 
     clearInterval(this.asteroidInterval);
@@ -418,13 +480,8 @@ class Game {
     
     this.stopProjectiles();
   }
-  releaseAsteroids(limit) {
-    let count = 0;
+  releaseAsteroids() {
     this.asteroidInterval = setInterval(() => {
-      count++;
-      if (count >= limit) {
-        clearInterval(this.asteroidInterval)
-      }
       const asteroid = new Asteroid(this.asteroidCounter++, this.levelRates.asteroid.speed);
       asteroid.release();
       this.asteroids.push(asteroid);
@@ -433,24 +490,20 @@ class Game {
   releaseMedics(rate) {
     // rate is # of releases per minute;
     // speed => duration = 10000 / speed
-    
     this.medicReleaseInterval = setInterval(() => {
-      // idNumber, rate, speed
+      // idNumber, speed
       const medic = new Medic(this.medicCounter++, this.levelRates.medic.speed);
       this.medics.push(medic);
       medic.release();
     }, 1000 / (this.levelRates.medic.rate / 60));
-
   }
   releaseOxygen(rate, duration) {
     // rate is # of releases per minute;
-    
     this.oxygenReleaseInterval = setInterval(() => {
       const oxygen = new Oxygen(this.oxygenCounter++, this.levelRates.oxygen.speed);
-      this.oxygen.push(oxygen);
+      this.oxygens.push(oxygen);
       oxygen.release(duration);
     }, 1000 / (this.levelRates.oxygen.rate / 60));
-
   }
   stopProjectiles() {
     this.projectiles.forEach((proj) => {
@@ -476,8 +529,6 @@ class Game {
     this.timerSection.appendChild(this.timerElement);
 
     content.appendChild(this.timerSection);
-
-    
   }
   startTimer(start) {
     this.timerElement.setAttribute('max', start);
@@ -505,7 +556,7 @@ const content = document.querySelector('#content');
 const initActions = document.createElement('section');
 const $gameOverMsg = $('<h2>Game Over</h2>').addClass('game-over');
 const roundOverMsg = document.createElement('h2');
-const overBox = document.createElement('div');
+const overScreenBackground = document.createElement('div');
 
 /*----- event listeners -----*/
 
@@ -527,16 +578,13 @@ function init() {
   content.appendChild(initActions);
 
   // Style Messages
-  roundOverMsg.textContent = 'Round Over'
-  roundOverMsg.classList.add('round-over');
 
-  overBox.classList.add('over-box');
+  overScreenBackground.classList.add('over-content');
 
 }
 
 function newGame() {
   content.removeChild(initActions);
 
-  console.log('New game started');
   game = new Game();
 }
