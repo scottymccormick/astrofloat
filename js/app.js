@@ -3,7 +3,64 @@
 const screenWidth = 700;
 const screenHeight = 450;
 
-const timerLength = 20;
+const timerLength = 30;
+
+const rateMap = {
+  Astronaut: {
+    speed: 1.9
+  },
+  Level1: {
+    asteroid: {
+      rate: 25,
+      speed: 1.5,
+      spread: 1,
+    },
+    oxygen: {
+      rate: 8,
+      speed: 1.4,
+      spread: 1,
+    },
+    medic: {
+      rate: 9,
+      speed: 1.5,
+      spread: 1,
+    }
+  },
+  Level2: {
+    asteroid: {
+      rate: 18,
+      speed: 2,
+      spread: 1,
+    },
+    oxygen: {
+      rate: 14,
+      speed: 2,
+      spread: 1,
+    },
+    medic: {
+      rate: 12,
+      speed: 2,
+      spread: 1,
+    }
+  }, 
+  Level3: {
+    asteroid: {
+      rate: 20,
+      speed: 3,
+      spread: 1.1,
+    },
+    oxygen: {
+      rate: 16,
+      speed: 2,
+      spread: 1.2,
+    },
+    medic: {
+      rate: 10,
+      speed: 3,
+      spread: 1.2,
+    }
+  }
+}
 
 /*----- app's state (variables) -----*/
 
@@ -33,15 +90,17 @@ class Mass {
 }
 
 class Projectile extends Mass {
-  constructor(width, height, type, idNumber) {
+  constructor(width, height, type, speed) {
     super(width, height, type);
     this.active = true;
+    this.speed = game.levelRates[type].speed;
+    this.spread = game.levelRates[type].spread;
   }
   release(duration) {
     const points = this.createPaths();
 
     this.move(points[0], 0, false);
-    this.animation = this.move(points[1], duration || 5000, true);
+    this.animation = this.move(points[1], 10000 / this.speed, true);
   }
   createPaths() {
     const axis = Math.random() > 0.5 ? 'x' : 'y';
@@ -64,9 +123,9 @@ class Projectile extends Mass {
     } else { // startPoint exists
       if (axis === 'x') {
         point[0] = (direction === '+' ? 1 : -1) * (screenWidth + this.dimensions.x); 
-        point[1] = (Math.random() * 1.4 * (screenHeight + this.dimensions.y)) - startPoint[1];
+        point[1] = (Math.random() * this.spread * (screenHeight + this.dimensions.y)) - startPoint[1];
       } else { // axis === 'y'
-        point[0] = (Math.random() * 1.4 * (screenWidth + this.dimensions.x)) - startPoint[0];
+        point[0] = (Math.random() * this.spread * (screenWidth + this.dimensions.x)) - startPoint[0];
         point[1] = (direction === '+' ? 1 : -1) * (screenHeight + this.dimensions.y);
       }
     }
@@ -116,14 +175,13 @@ class Asteroid extends Projectile {
   }
   collides() {
     this.div.style.backgroundColor = 'purple'; // add hit animation
-    // reduce person's health
-    setTimeout(() => {person.affectStatus(-1, 'health')}, 0);
+    person.affectStatus(-1, 'health');
   }
 }
 
 class Medic extends Projectile {
-  constructor(idNumber) {
-    super(40, 40, 'medic');
+  constructor(idNumber, speed) {
+    super(40, 40, 'medic', speed);
     this.id = `medic-${idNumber}`;
   }
   collides() {
@@ -139,7 +197,7 @@ class Medic extends Projectile {
 
 class Oxygen extends Projectile {
   constructor(idNumber) {
-    super(30, 30, 'oxygen-container');
+    super(30, 30, 'oxygen');
     this.div.innerHTML = 'O<sub>2</sub>'
     this.id = `oxygen-${idNumber}`;
   }
@@ -188,34 +246,6 @@ class Person extends Mass {
       }
     });
   }
-  // createStatusBars() {
-  //   this.healthProgress = document.createElement('progress');
-  //   this.healthProgress.setAttribute('max', 100);
-  //   this.healthProgress.setAttribute('value', this.health);
-  //   this.healthProgress.setAttribute('id', 'health-progress')
-  //   const healthLabel = document.createElement('label');
-  //   healthLabel.setAttribute('for', 'health-progress')
-  //   healthLabel.textContent = 'Health';
-
-  //   this.airProgress = document.createElement('progress');
-  //   this.airProgress.setAttribute('max', 100);
-  //   this.airProgress.setAttribute('value', this.air);
-  //   this.airProgress.setAttribute('id', 'air-progress');
-  //   const airLabel = document.createElement('label');
-  //   airLabel.setAttribute('for', 'air-progress');
-  //   airLabel.textContent = 'Oxygen';
-
-  //   this.progressBox = document.createElement('section');
-  //   this.progressBox.classList.add('progress-box')
-
-  //   this.progressBox.appendChild(healthLabel);
-  //   this.progressBox.appendChild(this.healthProgress);
-  //   this.progressBox.appendChild(document.createElement('br'))
-  //   this.progressBox.appendChild(airLabel);
-  //   this.progressBox.appendChild(this.airProgress);
-
-  //   content.appendChild(this.progressBox);
-  // }
   affectStatus (amount, type) {
     const attribute = type;
     const progress = `${type}Progress`;
@@ -258,7 +288,8 @@ class Person extends Mass {
       targets: this.div, 
       translateX: this.position.x += x,
       translateY: this.position.y += y,
-      elasticity: 0
+      elasticity: 0,
+      duration: 100
     });
     
     // detect if out of bounds
@@ -273,11 +304,8 @@ class Person extends Mass {
 class Game {
   constructor(){
     this.newGame();
-
     this.attachKeyListeners();
-
     this.createStatusBars();
-    // add timer to window
     this.createTimer();
 
     this.projectiles = ['asteroids', 'medics', 'oxygen'];
@@ -311,6 +339,8 @@ class Game {
     this.round++;
     this.active = true;
     this.timer = 30;
+
+    this.levelRates = rateMap[`Level${this.round}`];
   }
   attachKeyListeners() {
     // prevent scrolling
@@ -332,8 +362,8 @@ class Game {
   keyDetect (e) {
     let x = game.keys['ArrowLeft'] ? -1 : 0 + game.keys['ArrowRight'] ? 1 : 0;
     let y = game.keys['ArrowUp'] ? -1 : 0 + game.keys['ArrowDown'] ? 1 : 0;
-    x *= 5;
-    y *= 5;
+    x *= rateMap.Astronaut.speed;
+    y *= rateMap.Astronaut.speed;
     if (x !== 0 || y !== 0) {
       person.move([x, y])
       // e.preventDefault();
@@ -395,30 +425,31 @@ class Game {
       if (count >= limit) {
         clearInterval(this.asteroidInterval)
       }
-      const asteroid = new Asteroid(this.asteroidCounter++);
+      const asteroid = new Asteroid(this.asteroidCounter++, this.levelRates.asteroid.speed);
       asteroid.release();
       this.asteroids.push(asteroid);
-      console.log(this.asteroids);
-    }, 1000);
+    }, 1000 / (this.levelRates.asteroid.rate / 60));
   }
-  releaseMedics(rate, duration) {
+  releaseMedics(rate) {
     // rate is # of releases per minute;
+    // speed => duration = 10000 / speed
     
     this.medicReleaseInterval = setInterval(() => {
-      const medic = new Medic(this.medicCounter++);
+      // idNumber, rate, speed
+      const medic = new Medic(this.medicCounter++, this.levelRates.medic.speed);
       this.medics.push(medic);
-      medic.release(duration);
-    }, 1000 / (rate / 60));
+      medic.release();
+    }, 1000 / (this.levelRates.medic.rate / 60));
 
   }
   releaseOxygen(rate, duration) {
     // rate is # of releases per minute;
     
     this.oxygenReleaseInterval = setInterval(() => {
-      const oxygen = new Oxygen(this.oxygenCounter++);
+      const oxygen = new Oxygen(this.oxygenCounter++, this.levelRates.oxygen.speed);
       this.oxygen.push(oxygen);
       oxygen.release(duration);
-    }, 1000 / (rate / 60));
+    }, 1000 / (this.levelRates.oxygen.rate / 60));
 
   }
   stopProjectiles() {
