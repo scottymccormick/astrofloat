@@ -117,7 +117,7 @@ class Asteroid extends Projectile {
   collides() {
     this.div.style.backgroundColor = 'purple'; // add hit animation
     // reduce person's health
-    setTimeout(() => {person.affectHealth(-1)}, 0);
+    setTimeout(() => {person.affectStatus(-1, 'health')}, 0);
   }
 }
 
@@ -128,7 +128,24 @@ class Medic extends Projectile {
   }
   collides() {
     this.active = false;
-    person.affectHealth(50);
+    person.affectStatus(50, 'health');
+    super.completesPath();
+  }
+  release() {
+    content.appendChild(this.div);
+    super.release();
+  }
+}
+
+class Oxygen extends Projectile {
+  constructor(idNumber) {
+    super(30, 30, 'oxygen-container');
+    this.div.innerHTML = 'O<sub>2</sub>'
+    this.id = `oxygen-${idNumber}`;
+  }
+  collides() {
+    this.active = false;
+    person.affectStatus(30, 'air');
     super.completesPath();
   }
   release() {
@@ -141,9 +158,9 @@ class Person extends Mass {
   constructor() {
     super(50, 50, 'astronaut');
     this.health = 100;
-    this.oxygen = 100;
-    // create health and oxygen bars
-    this.createStatusBars();
+    this.air = 100;
+    // create health and air bars
+    // this.createStatusBars();
     content.appendChild(this.div);
 
     // initial movement
@@ -171,67 +188,69 @@ class Person extends Mass {
       }
     });
   }
-  createStatusBars() {
-    this.healthProgress = document.createElement('progress');
-    this.healthProgress.setAttribute('max', 100);
-    this.healthProgress.setAttribute('value', this.health);
-    this.healthProgress.setAttribute('id', 'health-progress')
-    const healthLabel = document.createElement('label');
-    healthLabel.setAttribute('for', 'health-progress')
-    healthLabel.textContent = 'Health';
+  // createStatusBars() {
+  //   this.healthProgress = document.createElement('progress');
+  //   this.healthProgress.setAttribute('max', 100);
+  //   this.healthProgress.setAttribute('value', this.health);
+  //   this.healthProgress.setAttribute('id', 'health-progress')
+  //   const healthLabel = document.createElement('label');
+  //   healthLabel.setAttribute('for', 'health-progress')
+  //   healthLabel.textContent = 'Health';
 
-    this.oxygenProgress = document.createElement('progress');
-    this.oxygenProgress.setAttribute('max', 100);
-    this.oxygenProgress.setAttribute('value', this.oxygen);
-    this.oxygenProgress.setAttribute('id', 'oxygen-progress');
-    const oxygenLabel = document.createElement('label');
-    oxygenLabel.setAttribute('for', 'oxygen-progress');
-    oxygenLabel.textContent = 'Oxygen';
+  //   this.airProgress = document.createElement('progress');
+  //   this.airProgress.setAttribute('max', 100);
+  //   this.airProgress.setAttribute('value', this.air);
+  //   this.airProgress.setAttribute('id', 'air-progress');
+  //   const airLabel = document.createElement('label');
+  //   airLabel.setAttribute('for', 'air-progress');
+  //   airLabel.textContent = 'Oxygen';
 
-    this.progressBox = document.createElement('section');
-    this.progressBox.classList.add('progress-box')
+  //   this.progressBox = document.createElement('section');
+  //   this.progressBox.classList.add('progress-box')
 
-    this.progressBox.appendChild(healthLabel);
-    this.progressBox.appendChild(this.healthProgress);
-    this.progressBox.appendChild(document.createElement('br'))
-    this.progressBox.appendChild(oxygenLabel);
-    this.progressBox.appendChild(this.oxygenProgress);
+  //   this.progressBox.appendChild(healthLabel);
+  //   this.progressBox.appendChild(this.healthProgress);
+  //   this.progressBox.appendChild(document.createElement('br'))
+  //   this.progressBox.appendChild(airLabel);
+  //   this.progressBox.appendChild(this.airProgress);
 
-    content.appendChild(this.progressBox);
-  }
-  affectHealth(amount) {
-    if (amount + this.health > 100) {
-      this.health = 100;
+  //   content.appendChild(this.progressBox);
+  // }
+  affectStatus (amount, type) {
+    const attribute = type;
+    const progress = `${type}Progress`;
+    if (amount + this[attribute] > 100) {
+      this[attribute] = 100;
     } else {
-      this.health += amount;
+      this[attribute] += amount;
     }
     
     anime({
-      targets: this.healthProgress,
-      value: this.health,
-      duration: amount > 0 ? 1000 : 100,
+      targets: this[progress],
+      value: this[attribute],
+      duration: 0,
       easing: 'linear'
     });
-    if (this.health === 0) {
+    if (this[attribute] === 0) {
       game.over();
     }
   }
-  setOxygenLoss(toLose) {
+  setAirLoss(toLose) {
     if (toLose) {
-      this.oxygenInterval = setInterval(() => {
-        if (this.oxygen <= 0) {
+      this.airInterval = setInterval(() => {
+        if (this.air <= 0) {
           game.over();
         }
-        this.oxygen -= 0.25;
+        this.air -= 0.25;
         anime({
-          targets: this.oxygenProgress,
-          value: this.oxygen,
+          targets: this.airProgress,
+          value: this.air,
           duration: 1,
           easing: 'linear'
         });
       }, 100)
     } else {
-      clearInterval(this.oxygenInterval);
+      clearInterval(this.airInterval);
     }
   }
   move ([x, y]) {
@@ -253,11 +272,53 @@ class Person extends Mass {
 
 class Game {
   constructor(){
-    this.round = 1;
-    this.active = true;
+    this.newGame();
+
+    this.attachKeyListeners();
+
+    this.createStatusBars();
+    // add timer to window
+    this.createTimer();
+
+    this.projectiles = ['asteroids', 'medics', 'oxygen'];
+    
+    setTimeout(() => {
+      this.releaseAsteroids(40);
+      // begin losing oxygen
+      person.setAirLoss(true);
+      this.releaseMedics(30);
+      this.releaseOxygen(60);
+      this.startTimer(timerLength); // temporary global constant
+    }, 2000);
+
+    console.log('Game constructed');
+  }
+  newGame() {
+    this.round = 0;
     this.asteroidCounter = 0;
     this.medicCounter = 0;
+    this.oxygenCounter = 0;
+
+    this.asteroids = [];
+    this.medics = [];
+    this.oxygen = [];
+    // create astronaut
+    person = new Person();
+
+    this.newRound();
+  }
+  newRound() {
+    this.round++;
+    this.active = true;
     this.timer = 30;
+  }
+  attachKeyListeners() {
+    // prevent scrolling
+    window.addEventListener("keydown", function(e) {
+      if(['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].indexOf(e.code) > -1) {
+          e.preventDefault();
+      }
+    }, false);
 
     // attach key event listeners
     this.keys = {};
@@ -267,24 +328,6 @@ class Game {
     window.addEventListener('keyup', (e) => {
       this.keys[e.code] = false;
     });
-    
-    console.log('Game constructed');
-
-    // create astronaut
-    person = new Person();
-
-    // add timer to window
-    this.createTimer();
-
-    this.asteroids = [];
-    this.medics = [];
-    setTimeout(() => {
-      this.releaseAsteroids(40);
-      // begin losing oxygen
-      person.setOxygenLoss(true);
-      this.releaseMedics(30);
-      this.startTimer(timerLength); // temporary global constant
-    }, 2000)
   }
   keyDetect (e) {
     let x = game.keys['ArrowLeft'] ? -1 : 0 + game.keys['ArrowRight'] ? 1 : 0;
@@ -296,6 +339,34 @@ class Game {
       // e.preventDefault();
     };
     if (game.active) setTimeout(game.keyDetect, 20);
+  }
+  createStatusBars() {
+    this.healthProgress = document.createElement('progress');
+    this.healthProgress.setAttribute('max', 100);
+    this.healthProgress.setAttribute('value', this.health);
+    this.healthProgress.setAttribute('id', 'health-progress')
+    const healthLabel = document.createElement('label');
+    healthLabel.setAttribute('for', 'health-progress')
+    healthLabel.textContent = 'Health';
+
+    this.airProgress = document.createElement('progress');
+    this.airProgress.setAttribute('max', 100);
+    this.airProgress.setAttribute('value', this.air);
+    this.airProgress.setAttribute('id', 'air-progress');
+    const airLabel = document.createElement('label');
+    airLabel.setAttribute('for', 'air-progress');
+    airLabel.textContent = 'Oxygen';
+
+    this.progressBox = document.createElement('section');
+    this.progressBox.classList.add('progress-box')
+
+    this.progressBox.appendChild(healthLabel);
+    this.progressBox.appendChild(this.healthProgress);
+    this.progressBox.appendChild(document.createElement('br'))
+    this.progressBox.appendChild(airLabel);
+    this.progressBox.appendChild(this.airProgress);
+
+    content.appendChild(this.progressBox);
   }
   over(cause) {
 
@@ -310,13 +381,12 @@ class Game {
     game.active = false;
 
     clearInterval(this.asteroidInterval);
-    clearInterval(person.setOxygenLoss(false));
+    clearInterval(person.setAirLoss(false));
     clearInterval(this.timerInterval);
     clearInterval(this.medicReleaseInterval);
+    clearInterval(this.oxygenReleaseInterval);
     
-    this.stopAsteroids();
-    this.stopMedics();
-    
+    this.stopProjectiles();
   }
   releaseAsteroids(limit) {
     let count = 0;
@@ -341,15 +411,22 @@ class Game {
     }, 1000 / (rate / 60));
 
   }
-  stopAsteroids() {
-    for (let i = 0; i < this.asteroids.length; i++) {
-      this.asteroids[i].animation.pause();
-    }
+  releaseOxygen(rate, duration) {
+    // rate is # of releases per minute;
+    
+    this.oxygenReleaseInterval = setInterval(() => {
+      const oxygen = new Oxygen(this.oxygenCounter++);
+      this.oxygen.push(oxygen);
+      oxygen.release(duration);
+    }, 1000 / (rate / 60));
+
   }
-  stopMedics() {
-    for (let i = 0; i < this.medics.length; i++) {
-      this.medics[i].animation.pause();
-    }
+  stopProjectiles() {
+    this.projectiles.forEach((proj) => {
+      for (let i = 0; i < this[proj].length; i++) {
+        this[proj][i].animation.pause();
+      }
+    })
   }
   createTimer() {
     this.timerElement = document.createElement('progress');

@@ -90,6 +90,18 @@ footer {
   width: 40px;
 }
 
+.oxygen-container {
+  display: inline-block;
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: white;
+  color: #000000;
+  text-align: center;
+  line-height: 30px;
+}
+
 .over-box {
   display: flex;
   height: 100%;
