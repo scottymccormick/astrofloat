@@ -3,7 +3,7 @@
 const screenWidth = 800;
 const screenHeight = 500;
 
-const timerLength = 5;
+const timerLength = 3;
 
 const rateMap = {
   Astronaut: {
@@ -254,7 +254,7 @@ class Person extends Mass {
         that.position.x = initialX;
         that.position.y = initialY;
         // temporarily delay onset on keyDetection
-        setTimeout(game.keyDetect, 10);
+        setTimeout(() => {game.keyDetect()}, 30);
       }
     });
   }
@@ -274,14 +274,14 @@ class Person extends Mass {
       easing: 'linear'
     });
     if (this[attribute] === 0) {
-      game.over();
+      game.gameOver();
     }
   }
   setAirLoss(toLose) {
     if (toLose) {
       this.airInterval = setInterval(() => {
         if (this.air <= 0) {
-          game.over();
+          game.gameOver();
         }
         this.air -= 0.25;
         anime({
@@ -308,28 +308,25 @@ class Person extends Mass {
     if (this.position.x < -this.dimensions.x || 
       this.position.y < -this.dimensions.y ||
       this.position.y > screenHeight ||
-      this.position.x > screenWidth) game.over()
+      this.position.x > screenWidth) game.gameOver()
   }
   reset() {
     this.health = 100;
     this.air = 100;
     this.entryAnimation();
   }
-
 }
 
 class Game {
   constructor(){
-    this.makeElements();
-    this.newGame();
-    this.attachKeyListeners();
-    this.createStatusBars();
-    this.createTimer();
-    
-
     this.projectiles = ['asteroids', 'medics', 'oxygens'];
     
-    setTimeout(() => {this.startRound()}, person.animationDuration);
+    this.makeElements();
+    this.attachKeyListeners();
+    this.newGame();
+    
+    this.createStatusBars();
+    this.createTimer();
   }
   newGame() {
     this.round = 0;
@@ -337,9 +334,8 @@ class Game {
     this.medicCounter = 0;
     this.oxygenCounter = 0;
 
-    this.asteroids = [];
-    this.medics = [];
-    this.oxygens = [];
+    this.projectiles.forEach((projectile) => {this[projectile] = []})
+
     // create astronaut
     person = new Person();
 
@@ -349,13 +345,24 @@ class Game {
     this.round++;
     this.active = true;
     this.timer = 30;
-
     // destroy all projectiles
-    if (this.round > 1) this.destroyProjectiles();
+    if (this.round > 0) this.destroyProjectiles();
 
     this.roundNumber.textContent = this.round;
-
     this.levelRates = rateMap[`Level${this.round}`];
+
+    // Add countdown that refills timer too
+    // this.startCountdown()
+    setTimeout(() => {this.startRound()}, person.animationDuration);
+  }
+  startRound() {
+    this.releaseAsteroids();
+    this.releaseMedics();
+    this.releaseOxygen();
+    this.resetTimer(timerLength); // temporary global constant
+    this.startTimer();
+    // begin losing oxygen
+    person.setAirLoss(true);
   }
   attachKeyListeners() {
     // prevent scrolling
@@ -375,15 +382,16 @@ class Game {
     });
   }
   keyDetect (e) {
-    let x = game.keys['ArrowLeft'] ? -1 : 0 + game.keys['ArrowRight'] ? 1 : 0;
-    let y = game.keys['ArrowUp'] ? -1 : 0 + game.keys['ArrowDown'] ? 1 : 0;
+    console.log(this.keys)
+    let x = (this.keys['ArrowLeft'] ? -1 : 0) + (this.keys['ArrowRight'] ? 1 : 0);
+    let y = (this.keys['ArrowUp'] ? -1 : 0) + (this.keys['ArrowDown'] ? 1 : 0);
     x *= rateMap.Astronaut.speed;
     y *= rateMap.Astronaut.speed;
+    console.log(x,y)
     if (x !== 0 || y !== 0) {
-      person.move([x, y])
-      // e.preventDefault();
+      person.move([x, y]);
     };
-    if (game.active) setTimeout(game.keyDetect, 20);
+    if (this.active) setTimeout(() => {this.keyDetect()}, 20);
   }
   createStatusBars() {
     this.healthProgress = document.createElement('progress');
@@ -414,27 +422,8 @@ class Game {
     content.appendChild(this.progressBox);
   }
   makeElements() {
-    this.nextRoundBtn = document.createElement('button');
-    this.nextRoundBtn.classList.add('next-round-btn')
-    this.nextRoundBtn.textContent = 'Next Level';
-    this.nextRoundBtn.addEventListener('click', () => {
-      this.newRound();
-      this.startRound();
-      overScreenBackground.classList.add('hidden');
-      person.reset();
-    });
-    
-    roundOverMsg.classList.add('round-over');
 
-    this.roundOverContainer = document.createElement('section');
-    this.roundOverContainer.classList.add('round-over-container');
-    this.roundOverContainer.appendChild(roundOverMsg);
-    this.roundOverContainer.appendChild(this.nextRoundBtn);
-
-    overScreenBackground.appendChild(this.roundOverContainer);
-    overScreenBackground.classList.add('hidden');
-    content.append(overScreenBackground);
-
+    // Level Information
     this.roundBox = document.createElement('section');
     this.roundBox.classList.add('round-box');
     this.roundLabel = document.createElement('label');
@@ -444,41 +433,94 @@ class Game {
     this.roundBox.appendChild(this.roundLabel);
     this.roundBox.appendChild(this.roundNumber);
     content.appendChild(this.roundBox);
+
+    // Round Over Elements
+    this.nextRoundBtn = document.createElement('button');
+    this.nextRoundBtn.classList.add('next-round-btn')
+    this.nextRoundBtn.textContent = 'Next Level';
+    this.nextRoundBtn.addEventListener('click', () => {
+      this.newRound();
+      // this.startRound();
+      overScreenBackground.removeChild(this.roundOverContainer);
+      content.removeChild(overScreenBackground);
+      person.reset();
+    });
+    
+    roundOverMsg.classList.add('round-over');
+
+    this.roundOverContainer = document.createElement('section');
+    this.roundOverContainer.classList.add('round-over-container');    
+
+    // Game Completed Elements
+    this.gameCompleteContainer = document.createElement('section');
+    this.gameCompleteContainer.classList.add('game-complete-container');
+    this.gameCompleteMessage = document.createElement('h3');
+    this.gameCompleteMessage.textContent = 'Game Completed'
+    this.gameCompleteSubmessage = document.createElement('h4');
+    this.gameCompleteSubmessage.textContent = 'Check back later for more levels!';
+    
+    this.newGameBtn = document.createElement('button');
+    this.newGameBtn.textContent = 'Play Again'
+    this.newGameBtn.classList.add('play-again-btn');
+    this.newGameBtn.addEventListener('click', () => {
+      // destroy game
+      this.endGame();
+      this.newGame();
+    });
+    
+    this.gameCompleteContainer.appendChild(this.gameCompleteMessage);
+    this.gameCompleteContainer.appendChild(this.gameCompleteSubmessage);
+    this.gameCompleteContainer.appendChild(this.newGameBtn);
+
   }
-  startRound() {
-    this.releaseAsteroids();
-    this.releaseMedics();
-    this.releaseOxygen();
-    this.startTimer(timerLength); // temporary global constant
-    // begin losing oxygen
-    person.setAirLoss(true);
+  endGame() {
+    overScreenBackground.removeChild(this.gameCompleteContainer);
+    content.removeChild(overScreenBackground);
+    this.destroyProjectiles();
+    person.div.remove();
+    person = null;
   }
   destroyProjectiles() {
     this.projectiles.forEach((type) => {
-      for (let i = this[type].length; i >= 0; i--) {
+      for (let i = this[type].length - 1; i >= 0; i--) {
         const projectile = this[type][i];
         projectile.completesPath();
       }
-      console.log(this[type]);
     })
   }
-  over(cause) {
-    if (cause === 'timer') {
-      overScreenBackground.classList.remove('hidden');
-      // make next round button appear
-      roundOverMsg.textContent = `Level ${this.round} Complete!`;
-    } else {
-      $(content).append($gameOverMsg);
-    }
-    game.active = false;
+  gameOver(cause) {
+    
+    $(content).append($gameOverMsg);
+    this.active = false;
 
+    this.stopIntervals();
+    this.stopProjectiles();
+  }
+  levelOver() {
+    this.active = false;
+    this.stopIntervals();
+    this.stopProjectiles();
+    
+    content.appendChild(overScreenBackground);
+
+    if (rateMap[`Level${this.round + 1}`]) {
+      roundOverMsg.textContent = `Level ${this.round} Complete!`;
+
+      this.roundOverContainer.appendChild(roundOverMsg);
+      this.roundOverContainer.appendChild(this.nextRoundBtn);
+      overScreenBackground.appendChild(this.roundOverContainer);
+    } else { // game completed!
+      overScreenBackground.appendChild(this.gameCompleteContainer);
+    }
+    // make next round button appear
+    overScreenBackground.classList.remove('hidden');
+  }
+  stopIntervals() {
     clearInterval(this.asteroidInterval);
     clearInterval(person.setAirLoss(false));
-    clearInterval(this.timerInterval);
+    // clearInterval(this.timerInterval);
     clearInterval(this.medicReleaseInterval);
     clearInterval(this.oxygenReleaseInterval);
-    
-    this.stopProjectiles();
   }
   releaseAsteroids() {
     this.asteroidInterval = setInterval(() => {
@@ -530,20 +572,23 @@ class Game {
 
     content.appendChild(this.timerSection);
   }
-  startTimer(start) {
+  resetTimer(start) {
     this.timerElement.setAttribute('max', start);
     this.timerElement.setAttribute('value', this.timer);
     this.timer = start;
+  }
+  startTimer() {
     this.timerInterval = setInterval(() => {
+      this.timer--;
       if (this.timer <= 0) {
         clearInterval(this.timerInterval);
-        game.over('timer');
+        this.levelOver();
       }
-      this.timer--;
       anime({
         targets: this.timerElement,
         value: this.timer,
         round: 1,
+        duration: 0,
         easing: 'linear'
       });      
     }, 1000)
