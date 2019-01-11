@@ -9,10 +9,7 @@
 	* Reach next level by surviving until the timer runs out
 	* Click *New Game* to start the game from Level 1
 	* Click *Restart Level* to start the current level again
-	* Click *Statistics* to view:
-		- Maximum level reached across all games
-		- Asteroids avoided in current game
-		- Asteroids hit in current game
+	
 		
 #### A user should be able to:
 1. Win the level by surviving until the timer runs out
@@ -38,6 +35,10 @@
 	* Comets that are slightly attracted astronaut's path 
 3. Only use arrow keys to move when a floating jetpack item is collected
 4. Play the game on a mobile device
+5. Click *Statistics* to view:
+		- Maximum level reached across all games
+		- Asteroids avoided in current game
+		- Asteroids hit in current game
 
 ## Wireframes
 #### Welcome Page
@@ -56,10 +57,6 @@ This is the screen that the players sees while gameplay is happening. Note: The 
 ![level complete](./wireframes/level-complete.jpg "Level Complete")
 Seen at the completion of a level (with timer going to zero)
 
-#### Statistics
-![statistics](./wireframes/statistics.jpg "Statistics")
-Viewable by the user if they click on the **Statistics** button at the bottom of the gameplay screen.
-
 ## Development
 ### Technology
 This game was built using the following technologies:
@@ -73,7 +70,9 @@ This game was built using the following technologies:
 The basis of the code architecture is the Game class, an instance of which controls the flow of the game from the very start, through each round, until the game is over. Each moving component is an extension of the Mass class, providing basic position and dimension characteristics. The Mass class is extended into the Person class (representing the astronaut) and the Projectile class (representing all other flying objects). The Asteroid, Medic, and Oxygen classes are all extended from Projectile, which provides the random path generation and motion.
 
 ### Open Items
-The main open item is motion of the astronaut based on clicking and holding a part of the screen to create a black hole that the astronaut is attracted to based on the distance between them. I hoped to accomplish this because it adds an element of complexity as well as making the game touch-screen enabled. 
+The main open item is motion of the astronaut based on clicking and holding a part of the screen to create a black hole that the astronaut is attracted to based on the distance between them. I hoped to accomplish this because it adds an element of complexity as well as making the game touch-screen enabled.
+
+The bottom row of buttons are also not finished due to time constraints.
 
 ### Challenges
 The first main challenge was figuring out which library to use to assist with animation. I looked into Paper.js at first, since I've seen it used elsewhere and liked the performance, however I did not want to spend too much time integrating the canvas element with my other div and section elements that make up the majority of the application. For the sake of time and complexity, I chose Anime.js.
