@@ -3,7 +3,7 @@
 const screenWidth = 800;
 const screenHeight = 500;
 
-const timerLength = 3;
+const timerLength = 20;
 
 const rateMap = {
   Astronaut: {
@@ -11,7 +11,7 @@ const rateMap = {
   },
   Level1: {
     asteroid: {
-      rate: 25,
+      rate: 30,
       speed: 1.5,
       spread: 1,
     },
@@ -28,7 +28,7 @@ const rateMap = {
   },
   Level2: {
     asteroid: {
-      rate: 18,
+      rate: 35,
       speed: 2,
       spread: 1,
     },
@@ -45,7 +45,7 @@ const rateMap = {
   }, 
   Level3: {
     asteroid: {
-      rate: 20,
+      rate: 40,
       speed: 3,
       spread: 1.1,
     },
@@ -174,7 +174,11 @@ class Asteroid extends Projectile {
     super.completesPath();
   }
   collides() {
-    this.div.style.backgroundColor = 'purple'; // add hit animation
+    if (!this.div.classList.contains('asteroid-hit')) {
+      this.div.classList.add('asteroid-hit'); //animation
+      setTimeout(() => {this.div.classList.remove('asteroid-hit')}, 1000)
+    }
+    
     person.affectStatus(-1, 'health');
   }
 }
@@ -204,8 +208,8 @@ class Medic extends Projectile {
 
 class Oxygen extends Projectile {
   constructor(idNumber) {
-    super(30, 30, 'oxygen');
-    this.div.innerHTML = 'O<sub>2</sub>'
+    super(26, 39, 'oxygen');
+    // this.div.innerHTML = 'O<sub>2</sub>'
     this.id = `oxygen-${idNumber}`;
   }
   collides() {
@@ -382,12 +386,10 @@ class Game {
     });
   }
   keyDetect (e) {
-    console.log(this.keys)
     let x = (this.keys['ArrowLeft'] ? -1 : 0) + (this.keys['ArrowRight'] ? 1 : 0);
     let y = (this.keys['ArrowUp'] ? -1 : 0) + (this.keys['ArrowDown'] ? 1 : 0);
     x *= rateMap.Astronaut.speed;
     y *= rateMap.Astronaut.speed;
-    console.log(x,y)
     if (x !== 0 || y !== 0) {
       person.move([x, y]);
     };
@@ -395,6 +397,7 @@ class Game {
   }
   createStatusBars() {
     this.healthProgress = document.createElement('progress');
+    this.healthProgress.classList.add('health-progress');
     this.healthProgress.setAttribute('max', 100);
     this.healthProgress.setAttribute('value', person.health);
     this.healthProgress.setAttribute('id', 'health-progress')
@@ -403,6 +406,7 @@ class Game {
     healthLabel.textContent = 'Health';
 
     this.airProgress = document.createElement('progress');
+    this.airProgress.classList.add('air-progress');
     this.airProgress.setAttribute('max', 100);
     this.airProgress.setAttribute('value', person.air);
     this.airProgress.setAttribute('id', 'air-progress');
