@@ -239,6 +239,80 @@ progress {
   box-shadow: 0px 0px 20px 15px rgba(0,0,0,0.7);
 }
 
+.instructions {
+  position: absolute;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: space-around;
+  align-items: center;
+  flex-direction: column;
+  padding: 80px;
+}
+
+.instructions h2 {
+  font-size: 2.5em;
+  color: #51ff0d;
+}
+
+.instructions h3 {
+  margin: 10px 0;
+  color: #51ff0d;
+}
+
+.instructions img {
+  margin-right: 10px;
+}
+
+.astronaut-image {
+  height: 50px;
+  width: 50px;
+}
+
+.instructions section {
+  width: 100%;
+}
+
+.arrow-keys-image {
+ width: 60px;
+ height: 40px;
+}
+
+.asteroid-image {
+  height: 50px;
+  width: 50px;
+}
+
+.oxygen-image {
+  height: 60px;
+  width: 50px;
+}
+
+.medic-image {
+  height: 50px;
+  width: 50px;
+}
+
+.instructions div {
+  display: flex;
+  justify-content: flex-start;
+  margin: 5px 0;
+}
+
+.instructions button {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 0;
+  border-radius: 5px;
+  font-size: 1.3em;
+  padding: 10px;
+  box-shadow: inset 0px 0px 5px 5px #51ff0d;
+  margin: 10px;
+  background-color: black;
+  color: white;
+}
+
 .hidden {
   display: none;
 }

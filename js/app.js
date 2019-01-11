@@ -3,7 +3,7 @@
 const screenWidth = 800;
 const screenHeight = 500;
 
-const timerLength = 3;
+const timerLength = 2;
 
 const rateMap = {
   Astronaut: {
@@ -46,7 +46,7 @@ const rateMap = {
   Level3: {
     asteroid: {
       rate: 60,
-      speed: 3,
+      speed: 2,
       spread: 1.1,
     },
     oxygen: {
@@ -56,6 +56,23 @@ const rateMap = {
     },
     medic: {
       rate: 10,
+      speed: 3,
+      spread: 1.2,
+    }
+  },
+  Level4: {
+    asteroid: {
+      rate: 80,
+      speed: 1.8,
+      spread: 1.3,
+    },
+    oxygen: {
+      rate: 14,
+      speed: 2,
+      spread: 1.2,
+    },
+    medic: {
+      rate: 12,
       speed: 3,
       spread: 1.2,
     }
@@ -152,8 +169,7 @@ class Projectile extends Mass {
     });
   }
   collides() {
-    // does something
-    console.log(`Collision with something`);
+    console.log(`Collision`);
   }
   completesPath() {
     this.div.remove();
@@ -261,8 +277,7 @@ class Person extends Mass {
         // temporarily delay onset on keyDetection
         setTimeout(() => {game.keyDetect()}, 30);
       }
-    });
-    
+    });    
   }
   affectStatus (amount, type) {
     const attribute = type;
@@ -369,23 +384,7 @@ class Game {
     const countdownBox = document.createElement('section');
     countdownBox.classList.add('countdown');
     const overLay = document.createElement('div');
-    overLay.classList.add('over-content');
-
-    // animation issue
-    console.log(this.healthProgress)
-    anime({
-      targets: this.healthProgress,
-      value: this.person.health,
-      easing: 'linear',
-      duration: 2000
-    });
-    anime({
-      targets: this.airProgress,
-      value: this.person.air,
-      easing: 'linear',
-      duration: 2000
-    });
-    
+    overLay.classList.add('over-content');    
 
     countdownBox.appendChild(countdownElement);
     overLay.appendChild(countdownBox);
@@ -647,23 +646,33 @@ class Game {
 const content = document.querySelector('#content');
 const initActions = document.createElement('section');
 const $gameOverMsg = $('<h2>Game Over</h2>').addClass('game-over');
+const $howToBtn = $('<button/>').text('How to Play');
 const roundOverMsg = document.createElement('h2');
 const overScreenBackground = document.createElement('div');
 
 /*----- event listeners -----*/
+
+document.querySelector('.back-btn').addEventListener('click', () => {
+  document.querySelector('#instructions').classList.toggle('hidden');
+  initActions.classList.toggle('hidden');
+});
+$howToBtn.click(() => {
+  document.querySelector('#instructions').classList.toggle('hidden');
+  initActions.classList.toggle('hidden');
+});
 
 /*----- functions -----*/
 
 init();
 
 function init() {
-  console.log('Astrofloat initializted');
 
   // Add first buttons
   const $startBtn = $('<button/>').text('Start Game').on('click', newGame);
   $(initActions).append($startBtn);
 
-  const $howToBtn = $('<button/>').text('How to Play');
+  
+  
   $(initActions).append($howToBtn);
 
   $(initActions).addClass('initial-actions')
