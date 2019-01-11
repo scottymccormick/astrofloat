@@ -227,6 +227,18 @@ progress {
   right: 0;
 }
 
+.countdown {
+  position: absolute;
+  color: #51ff0d;
+  background-color: rgba(0, 0, 0, 0.7);
+  /* border-radius: 50%; */
+  padding: 50px;
+  margin: auto;
+  text-align: center;
+  font-size: 3em;
+  box-shadow: 0px 0px 20px 15px rgba(0,0,0,0.7);
+}
+
 .hidden {
   display: none;
 }

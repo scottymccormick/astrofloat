@@ -3,7 +3,7 @@
 const screenWidth = 800;
 const screenHeight = 500;
 
-const timerLength = 20;
+const timerLength = 3;
 
 const rateMap = {
   Astronaut: {
@@ -11,7 +11,7 @@ const rateMap = {
   },
   Level1: {
     asteroid: {
-      rate: 30,
+      rate: 35,
       speed: 1.5,
       spread: 1,
     },
@@ -28,7 +28,7 @@ const rateMap = {
   },
   Level2: {
     asteroid: {
-      rate: 35,
+      rate: 45,
       speed: 2,
       spread: 1,
     },
@@ -45,7 +45,7 @@ const rateMap = {
   }, 
   Level3: {
     asteroid: {
-      rate: 40,
+      rate: 60,
       speed: 3,
       spread: 1.1,
     },
@@ -140,7 +140,7 @@ class Projectile extends Mass {
       easing: 'linear',
       elasticity: 0,
       run: (anim) => {
-        if (this.intersects(person) && this.active) {
+        if (this.intersects(game.person) && this.active) {
           this.collides();
         }
       },
@@ -179,7 +179,7 @@ class Asteroid extends Projectile {
       setTimeout(() => {this.div.classList.remove('asteroid-hit')}, 1000)
     }
     
-    person.affectStatus(-1, 'health');
+    game.person.affectStatus(-1, 'health');
   }
 }
 
@@ -190,7 +190,7 @@ class Medic extends Projectile {
   }
   collides() {
     this.active = false;
-    person.affectStatus(50, 'health');
+    game.person.affectStatus(50, 'health');
     super.completesPath();
   }
   release() {
@@ -214,7 +214,7 @@ class Oxygen extends Projectile {
   }
   collides() {
     this.active = false;
-    person.affectStatus(30, 'air');
+    game.person.affectStatus(30, 'air');
     super.completesPath();
   }
   release() {
@@ -238,12 +238,13 @@ class Person extends Mass {
     this.animationDuration = 2100;
     content.appendChild(this.div);
 
-    this.entryAnimation();
+    // this.entryAnimation();
   }
   entryAnimation() {
     let that = this;
     const initialX = (screenWidth / 2) - (this.dimensions.x / 2);
     const initialY = (screenHeight / 2) - (this.dimensions.y / 2);
+    
     anime({
       targets: that.div,
       translateX: [{value: initialX, duration: 0}],
@@ -261,6 +262,7 @@ class Person extends Mass {
         setTimeout(() => {game.keyDetect()}, 30);
       }
     });
+    
   }
   affectStatus (amount, type) {
     const attribute = type;
@@ -317,7 +319,6 @@ class Person extends Mass {
   reset() {
     this.health = 100;
     this.air = 100;
-    this.entryAnimation();
   }
 }
 
@@ -341,7 +342,7 @@ class Game {
     this.projectiles.forEach((projectile) => {this[projectile] = []})
 
     // create astronaut
-    person = new Person();
+    this.person = new Person();
 
     this.newRound();
   }
@@ -356,8 +357,50 @@ class Game {
     this.levelRates = rateMap[`Level${this.round}`];
 
     // Add countdown that refills timer too
-    // this.startCountdown()
-    setTimeout(() => {this.startRound()}, person.animationDuration);
+
+    this.person.entryAnimation();
+    this.startCountdown();
+    // setTimeout(() => {this.startRound()}, person.animationDuration);
+  }
+  startCountdown() {
+    let count = 3;
+    const countdownElement = document.createElement('h3');
+    countdownElement.textContent = count;
+    const countdownBox = document.createElement('section');
+    countdownBox.classList.add('countdown');
+    const overLay = document.createElement('div');
+    overLay.classList.add('over-content');
+
+    // animation issue
+    console.log(this.healthProgress)
+    anime({
+      targets: this.healthProgress,
+      value: this.person.health,
+      easing: 'linear',
+      duration: 2000
+    });
+    anime({
+      targets: this.airProgress,
+      value: this.person.air,
+      easing: 'linear',
+      duration: 2000
+    });
+    
+
+    countdownBox.appendChild(countdownElement);
+    overLay.appendChild(countdownBox);
+    content.appendChild(overLay);
+    const countdownInterval = setInterval(() => {
+      if (count <= 1) {
+        clearInterval(countdownInterval);
+        countdownBox.removeChild(countdownElement);
+        overLay.removeChild(countdownBox);
+        content.removeChild(overLay);
+        this.startRound();
+      }
+      count--;
+      countdownElement.textContent = count;
+    }, 1000)
   }
   startRound() {
     this.releaseAsteroids();
@@ -366,7 +409,7 @@ class Game {
     this.resetTimer(timerLength); // temporary global constant
     this.startTimer();
     // begin losing oxygen
-    person.setAirLoss(true);
+    this.person.setAirLoss(true);
   }
   attachKeyListeners() {
     // prevent scrolling
@@ -391,7 +434,7 @@ class Game {
     x *= rateMap.Astronaut.speed;
     y *= rateMap.Astronaut.speed;
     if (x !== 0 || y !== 0) {
-      person.move([x, y]);
+      this.person.move([x, y]);
     };
     if (this.active) setTimeout(() => {this.keyDetect()}, 20);
   }
@@ -399,7 +442,7 @@ class Game {
     this.healthProgress = document.createElement('progress');
     this.healthProgress.classList.add('health-progress');
     this.healthProgress.setAttribute('max', 100);
-    this.healthProgress.setAttribute('value', person.health);
+    this.healthProgress.setAttribute('value', this.person.health);
     this.healthProgress.setAttribute('id', 'health-progress')
     const healthLabel = document.createElement('label');
     healthLabel.setAttribute('for', 'health-progress')
@@ -408,7 +451,7 @@ class Game {
     this.airProgress = document.createElement('progress');
     this.airProgress.classList.add('air-progress');
     this.airProgress.setAttribute('max', 100);
-    this.airProgress.setAttribute('value', person.air);
+    this.airProgress.setAttribute('value', this.person.air);
     this.airProgress.setAttribute('id', 'air-progress');
     const airLabel = document.createElement('label');
     airLabel.setAttribute('for', 'air-progress');
@@ -447,7 +490,7 @@ class Game {
       // this.startRound();
       overScreenBackground.removeChild(this.roundOverContainer);
       content.removeChild(overScreenBackground);
-      person.reset();
+      this.person.reset();
     });
     
     roundOverMsg.classList.add('round-over');
@@ -481,8 +524,8 @@ class Game {
     overScreenBackground.removeChild(this.gameCompleteContainer);
     content.removeChild(overScreenBackground);
     this.destroyProjectiles();
-    person.div.remove();
-    person = null;
+    this.person.div.remove();
+    this.person = null;
   }
   destroyProjectiles() {
     this.projectiles.forEach((type) => {
@@ -521,7 +564,7 @@ class Game {
   }
   stopIntervals() {
     clearInterval(this.asteroidInterval);
-    clearInterval(person.setAirLoss(false));
+    clearInterval(this.person.setAirLoss(false));
     // clearInterval(this.timerInterval);
     clearInterval(this.medicReleaseInterval);
     clearInterval(this.oxygenReleaseInterval);
