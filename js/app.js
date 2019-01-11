@@ -3,7 +3,7 @@
 const screenWidth = 800;
 const screenHeight = 500;
 
-const timerLength = 2;
+const timerLength = 15;
 
 const rateMap = {
   Astronaut: {
@@ -191,7 +191,7 @@ class Asteroid extends Projectile {
   }
   collides() {
     if (!this.div.classList.contains('asteroid-hit')) {
-      this.div.classList.add('asteroid-hit'); //animation
+      this.div.classList.add('asteroid-hit');
       setTimeout(() => {this.div.classList.remove('asteroid-hit')}, 1000)
     }
     
@@ -371,11 +371,8 @@ class Game {
     this.roundNumber.textContent = this.round;
     this.levelRates = rateMap[`Level${this.round}`];
 
-    // Add countdown that refills timer too
-
     this.person.entryAnimation();
     this.startCountdown();
-    // setTimeout(() => {this.startRound()}, person.animationDuration);
   }
   startCountdown() {
     let count = 3;
@@ -405,9 +402,9 @@ class Game {
     this.releaseAsteroids();
     this.releaseMedics();
     this.releaseOxygen();
-    this.resetTimer(timerLength); // temporary global constant
+    this.resetTimer(timerLength); 
     this.startTimer();
-    // begin losing oxygen
+    
     this.person.setAirLoss(true);
   }
   attachKeyListeners() {
@@ -486,7 +483,6 @@ class Game {
     this.nextRoundBtn.textContent = 'Next Level';
     this.nextRoundBtn.addEventListener('click', () => {
       this.newRound();
-      // this.startRound();
       overScreenBackground.removeChild(this.roundOverContainer);
       content.removeChild(overScreenBackground);
       this.person.reset();
@@ -535,7 +531,6 @@ class Game {
     })
   }
   gameOver(cause) {
-    
     $(content).append($gameOverMsg);
     this.active = false;
 
@@ -667,25 +662,16 @@ init();
 
 function init() {
 
-  // Add first buttons
   const $startBtn = $('<button/>').text('Start Game').on('click', newGame);
-  $(initActions).append($startBtn);
-
-  
-  
+  $(initActions).append($startBtn);  
   $(initActions).append($howToBtn);
-
   $(initActions).addClass('initial-actions')
   content.appendChild(initActions);
 
-  // Style Messages
-
   overScreenBackground.classList.add('over-content');
-
 }
 
 function newGame() {
   content.removeChild(initActions);
-
   game = new Game();
 }
