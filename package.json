@@ -1,0 +1,19 @@
+{
+  "name": "astrofloat",
+  "version": "1.0.0",
+  "description": "**Your Mission:** Keep the astronaut alive until interstellar help arrives. ## To-Do Items",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scottymccormick/astrofloat.git"
+  },
+  "author": "Scotty McCormick",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/scottymccormick/astrofloat/issues"
+  },
+  "homepage": "https://github.com/scottymccormick/astrofloat#readme"
+}
