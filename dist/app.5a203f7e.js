@@ -1162,7 +1162,7 @@ function newGame() {
   content.removeChild(initActions);
   game = new Game();
 }
-},{"../assets/levels":"assets/levels.js","../js/Person":"js/Person.js","../js/Asteroid":"js/Asteroid.js","../js/Medic":"js/Medic.js","../js/Oxygen":"js/Oxygen.js"}],"../../.npm-global/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"../assets/levels":"assets/levels.js","../js/Person":"js/Person.js","../js/Asteroid":"js/Asteroid.js","../js/Medic":"js/Medic.js","../js/Oxygen":"js/Oxygen.js"}],"../../../.npm-global/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -1189,7 +1189,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62453" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52020" + '/');
 
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
@@ -1331,5 +1331,5 @@ function hmrAccept(bundle, id) {
     return hmrAccept(global.parcelRequire, id);
   });
 }
-},{}]},{},["../../.npm-global/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","js/app.js"], null)
-//# sourceMappingURL=/app.c3f9f951.map
+},{}]},{},["../../../.npm-global/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","js/app.js"], null)
+//# sourceMappingURL=/app.5a203f7e.map

@@ -1,0 +1,8 @@
+# Cache for Parcel
+.cache
+
+# Dependency for directory
+node_modules
+
+# Apple stuff
+.DS_Store
