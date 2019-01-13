@@ -1,0 +1,317 @@
+* {
+  margin: 0;
+  box-sizing: border-box;
+  font-family: 'Ubuntu', sans-serif;
+}
+
+body {
+  font-size: 14px;
+  color: #ffffff;
+  background-color: #000000;
+  height: 100%;
+}
+
+h1 {
+  text-align: center;
+  margin: 4vh auto 0;
+  letter-spacing: 0.25em;
+  font-variant-ligatures: none;
+  font-size: 40px;
+}
+
+#content {
+  position: relative;
+  overflow: hidden;
+  height: 500px;
+  width: 800px;
+  border: 1px solid grey;
+  border-radius: 4px;
+  margin: 5vh auto;
+  box-shadow: 0px 0px 6px 0px #ffffff;
+}
+
+footer {
+  text-align: center;
+  width: 100%;
+  position: absolute;
+  bottom: 5px;
+}
+
+.initial-actions {
+  height: 100%;
+  text-align: center;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.initial-actions button {
+  border: 0;
+  border-radius: 5px;
+  box-shadow: inset 0px 0px 10px 5px green;
+  color: #ffffff;
+  font-size: 2.5em;
+  background-color: inherit;
+  padding: 30px;
+}
+
+.initial-actions button:nth-of-type(2) {
+  box-shadow: inset 0px 0px 10px 5px blue;
+}
+
+.astronaut {
+  display: inline-block;
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  /* background-color: inherit; */
+  background-image: url('astronaut.2df3cd96.png');
+  background-size: cover;
+  opacity: 0;
+}
+
+.asteroid {
+  display: inline-block;
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  /* background-color: red; */
+  background-image: url('asteroid.ab13cc6e.png');
+  background-size: cover;
+}
+
+.asteroid-hit {
+  opacity: 1;
+  animation: flash 0.2s linear 3;
+}
+
+@keyframes flash {
+  0%,100% { opacity: 0 }
+  50% { opacity: 1 }
+}
+
+.medic {
+  display: inline-block;
+  position: absolute;
+  background-image: url('red-cross-logo.3b689d35.jpg');
+  background-size: cover;
+  height: 40px;
+  width: 40px;
+}
+
+.oxygen {
+  display: inline-block;
+  position: absolute;
+  width: 26px;
+  height: 39px;
+  /* border-radius: 50%; */
+  /* background-color: white; */
+  background-image: url('scuba-tank.7282a1e8.png');
+  background-size: cover;
+  color: #000000;
+  text-align: center;
+  line-height: 30px;
+}
+
+.over-content {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  z-index: 1;
+  background-color: rgba(230, 230, 230, 0.3);
+}
+
+.game-over {
+  position: relative;
+  text-align: center;
+}
+
+.round-over-container, .game-complete-container {
+  width: 50%;
+  padding: 10px;
+  box-shadow: 0px 0px 20px 5px rgba(0,0,0,0.7);
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 5px;
+}
+
+.round-over {
+  color: #51ff0d;
+  padding: 10px;
+  text-align: center;
+}
+
+.next-round-btn, .play-again-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 5px;
+  font-size: 1.3em;
+  padding: 10px;
+  box-shadow: inset 0px 0px 15px 5px #51ff0d;
+  margin-top: 10px;
+  background-color: black;
+  color: white;
+}
+
+.game-complete-container {
+  text-align: center;
+}
+
+.game-complete-container h3 {
+  color: #ab00ce;
+  font-size: 2.2em;
+  text-transform: uppercase;
+  margin: 10px;
+}
+
+.game-complete-container h4 {
+  font-size: 1.5em;
+  margin: 5px;
+}
+
+progress {
+  background-color: grey;
+}
+
+.air-progress::-moz-progress-bar { 
+  background:  #0041ce;; 
+} /* Firefox */
+
+.air-progress::-webkit-progress-value { 
+  background:  #0041ce;; 
+} /* Chrome or Safari */
+
+.air-progress { 
+  color: #0041ce; 
+} /* In IE10 */
+
+.health-progress::-moz-progress-bar { 
+  background:  #c70707; 
+} /* Firefox */
+
+.health-progress::-webkit-progress-value { 
+  background:  #c70707; 
+} /* Chrome or Safari */
+
+.health-progress { 
+  color: #c70707;;
+} /* In IE10 */
+
+.progress-box {
+  position: absolute;
+  z-index: 1;
+}
+.round-box {
+  position: absolute;
+  top: 0px;
+  left: 0;
+  right: 0;
+  margin: auto;
+  text-align: center;
+  font-size: 1.5em;
+}
+
+.timer-section {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+}
+
+.countdown {
+  position: absolute;
+  color: #51ff0d;
+  background-color: rgba(0, 0, 0, 0.7);
+  /* border-radius: 50%; */
+  padding: 50px;
+  margin: auto;
+  text-align: center;
+  font-size: 3em;
+  box-shadow: 0px 0px 20px 15px rgba(0,0,0,0.7);
+}
+
+.instructions {
+  position: absolute;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: space-around;
+  align-items: center;
+  flex-direction: column;
+  padding: 80px;
+}
+
+.instructions h2 {
+  font-size: 2.5em;
+  color: #51ff0d;
+}
+
+.instructions h3 {
+  margin: 10px 0;
+  color: #51ff0d;
+}
+
+.instructions img {
+  margin-right: 10px;
+}
+
+.astronaut-image {
+  height: 50px;
+  width: 50px;
+}
+
+.instructions section {
+  width: 100%;
+}
+
+.arrow-keys-image {
+ width: 60px;
+ height: 40px;
+}
+
+.asteroid-image {
+  height: 50px;
+  width: 50px;
+}
+
+.oxygen-image {
+  height: 60px;
+  width: 50px;
+}
+
+.medic-image {
+  height: 50px;
+  width: 50px;
+}
+
+.instructions div {
+  display: flex;
+  justify-content: flex-start;
+  margin: 5px 0;
+}
+
+.instructions button {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 0;
+  border-radius: 5px;
+  font-size: 1.3em;
+  padding: 10px;
+  box-shadow: inset 0px 0px 5px 5px #51ff0d;
+  margin: 10px;
+  background-color: black;
+  color: white;
+}
+
+.hidden {
+  display: none;
+}

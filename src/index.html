@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Astrofloat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
+  <!-- Main CSS -->
+  <link rel="stylesheet" type="text/css" media="screen" href="../css/style.css" />
+  <!-- Anime.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.2.0/anime.min.js"></script>
+  <!-- jQuery -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  
+  <!-- Main JS -->
+  <script defer src="../js/app.js"></script>
+</head>
+<body>
+  <header>
+      <h1>Astrofloat</h1>
+  </header>
+
+  <div id="content">
+    <section id="instructions" class="instructions hidden">
+      <button class="back-btn">Back</button>
+      <h2>How to Play</h2>
+        <section id="goal">
+          <h3>Goal</h3>
+          <div>
+              <img src="../images/astronaut.png" class="astronaut-image" alt="Astronaut">
+              <p>You are an astronaut and your ship exploded while you were on a spacewalk! Survive the perils of space until your ship can reach you. Don't get hit by asteroids and make sure to replenish your oxygen. Luckily your ship was full of supplies but you have to reach the supplies however you can.</p>
+          </div>
+        </section>
+        <section id="controls">
+          <h3>Controls</h3>
+          <div>
+              <img src="../images/arrow-keys.png" class="arrow-keys-image" alt="Arrow Keys">
+              <p>Use the directional keys in order to move around the screen.</p>
+          </div>
+        </section>
+        <section id="components">
+          <h3>Components</h3>
+          <div>
+            <img src="../images/asteroid.png" class="asteroid-image" alt="Asteroid">
+            <p>Getting hit by an asteroid lowers your health. The longer you are in contact, the lower your health falls.</p>
+          </div>
+          <div>
+            <img src="../images/scuba-tank.png" class="oxygen-image" alt="Oxygen">
+            <p>Your air steadily leak over time. Pick up an oxygen tank in order to increase your oxygen levels.</p>
+          </div>
+          <div>
+            <img src="../images/red-cross-logo.jpg" class="medic-image" alt="Medic">
+            <p>If your health goes to zero, it's game over! To regain health, grab a medic pack.</p>
+          </div>
+        </section>
+      </section>
+  </div>
+
+  <footer>&copy;2019 Scotty McCormick</footer>
+</body>
+</html>
